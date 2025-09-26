@@ -1,5 +1,5 @@
 <?php
-// Update routes/web.php - Complete master data routes
+// routes/web.php - Complete routes with polling endpoint
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -12,6 +12,7 @@ use App\Http\Controllers\MasterDataController;
 Route::get('/', [PublicController::class, 'index'])->name('public.index');
 Route::get('/form-permohonan', [PublicController::class, 'showForm'])->name('public.form');
 Route::post('/form-permohonan', [PublicController::class, 'store'])->name('public.store');
+Route::get('/permohonan/latest', [PublicController::class, 'getLatest'])->name('public.latest'); // New polling endpoint
 
 // Auth routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');

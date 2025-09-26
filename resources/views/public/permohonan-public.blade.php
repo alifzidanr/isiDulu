@@ -7,7 +7,13 @@
 <div class="max-w-7xl mx-auto p-4 sm:p-6">
     <div class="bg-white shadow rounded-lg">
         <div class="px-4 sm:px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
-            <h2 class="text-lg sm:text-xl font-semibold text-gray-800">Daftar Permohonan</h2>
+            <div class="flex items-center space-x-3">
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-800">Daftar Permohonan</h2>
+                <div id="status-indicator" class="flex items-center space-x-2">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="text-xs text-green-600">Live</span>
+                </div>
+            </div>
             <a href="{{ route('public.form') }}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-center sm:text-left">
                 <i class="fas fa-plus mr-2"></i>Buat Permohonan
             </a>
@@ -29,9 +35,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody id="permohonan-tbody" class="bg-white divide-y divide-gray-200">
                     @forelse($permohonans as $permohonan)
-                    <tr>
+                    <tr data-id="{{ $permohonan->id_permohonan }}">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ $permohonan->tanggal->format('d/m/Y') }}</div>
                             <div class="text-sm font-medium text-gray-900">{{ $permohonan->nama_pemohon }}</div>
@@ -53,7 +59,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr>
+                    <tr id="empty-row">
                         <td colspan="3" class="px-6 py-4 text-center text-gray-500">Tidak ada permohonan</td>
                     </tr>
                     @endforelse
@@ -145,4 +151,172 @@
         @endif
     </div>
 </div>
+
+<script>
+    let latestId = {{ $permohonans->first()?->id_permohonan ?? 0 }};
+    let pollingInterval = null;
+    let isFirstPage = {{ $permohonans->currentPage() == 1 ? 'true' : 'false' }};
+
+    function getStatusBadgeClass(status) {
+        const classes = {
+            0: 'bg-yellow-100 text-yellow-800',
+            1: 'bg-blue-100 text-blue-800',
+            2: 'bg-green-100 text-green-800',
+            4: 'bg-purple-100 text-purple-800',
+            5: 'bg-red-100 text-red-800'
+        };
+        return classes[status] || 'bg-gray-100 text-gray-800';
+    }
+
+    function getStatusText(status) {
+        const texts = {
+            0: 'Permohonan',
+            1: 'Dikerjakan',
+            2: 'Selesai',
+            3: 'Diarsipkan',
+            4: 'Disahkan',
+            5: 'Dibatalkan'
+        };
+        return texts[status] || 'Unknown';
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    function truncateText(text, limit = 100) {
+        return text.length > limit ? text.substring(0, limit) + '...' : text;
+    }
+
+    function addNewPermohonan(permohonan) {
+        const tbody = document.getElementById('permohonan-tbody');
+        const emptyRow = document.getElementById('empty-row');
+        
+        // Remove empty row if exists
+        if (emptyRow) {
+            emptyRow.remove();
+        }
+        
+        // Check if row already exists
+        if (document.querySelector(`tr[data-id="${permohonan.id_permohonan}"]`)) {
+            return;
+        }
+        
+        const row = document.createElement('tr');
+        row.setAttribute('data-id', permohonan.id_permohonan);
+        row.className = 'animate-slide-in bg-blue-50';
+        
+        row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${formatDate(permohonan.tanggal)}</div>
+                <div class="text-sm font-medium text-gray-900">${permohonan.nama_pemohon}</div>
+                <div class="text-sm text-gray-500">${permohonan.unit.nama_unit}</div>
+            </td>
+            <td class="px-6 py-4">
+                <div class="text-sm text-gray-900">${truncateText(permohonan.keluhan)}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(permohonan.status_permohonan)}">
+                    ${getStatusText(permohonan.status_permohonan)}
+                </span>
+            </td>
+        `;
+        
+        tbody.insertBefore(row, tbody.firstChild);
+        
+        // Remove highlight after animation
+        setTimeout(() => {
+            row.classList.remove('bg-blue-50');
+        }, 2000);
+    }
+
+    function checkNewPermohonan() {
+        // Only poll if on first page
+        if (!isFirstPage) {
+            return;
+        }
+
+        fetch(`{{ route('public.latest') }}?last_id=${latestId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.count > 0) {
+                    // Update latest ID
+                    latestId = data.latest_id;
+                    
+                    // Add new permohonan to the table automatically
+                    data.permohonans.forEach(permohonan => {
+                        addNewPermohonan(permohonan);
+                    });
+                    
+                    // Show brief flash on live indicator
+                    const indicator = document.getElementById('status-indicator');
+                    indicator.classList.add('scale-110');
+                    setTimeout(() => {
+                        indicator.classList.remove('scale-110');
+                    }, 300);
+                }
+            })
+            .catch(error => {
+                console.error('Polling error:', error);
+                // Change indicator to show error
+                const indicator = document.getElementById('status-indicator');
+                const dot = indicator.querySelector('.bg-green-500');
+                const text = indicator.querySelector('.text-green-600');
+                dot.classList.remove('bg-green-500', 'animate-pulse');
+                dot.classList.add('bg-red-500');
+                text.classList.remove('text-green-600');
+                text.classList.add('text-red-600');
+                text.textContent = 'Error';
+            });
+    }
+
+    // Start polling when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        if (isFirstPage) {
+            pollingInterval = setInterval(checkNewPermohonan, 3000); // Poll every 3 seconds
+        }
+    });
+
+    // Stop polling when page is hidden, resume when visible
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            clearInterval(pollingInterval);
+        } else if (isFirstPage) {
+            pollingInterval = setInterval(checkNewPermohonan, 3000);
+            // Check immediately when tab becomes visible
+            checkNewPermohonan();
+        }
+    });
+
+    // Clean up on page unload
+    window.addEventListener('beforeunload', () => {
+        clearInterval(pollingInterval);
+    });
+</script>
+
+<style>
+    @keyframes slide-in {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-slide-in {
+        animation: slide-in 0.5s ease-out;
+    }
+
+    #status-indicator {
+        transition: transform 0.3s ease;
+    }
+
+    #status-indicator.scale-110 {
+        transform: scale(1.1);
+    }
+</style>
 @endsection

@@ -12,7 +12,7 @@ class PublicController extends Controller
     {
         $permohonans = Permohonan::with(['unit'])
             ->orderBy('tanggal', 'desc')
-            ->paginate(25); // Changed from 10 to 25
+            ->paginate(25);
             
         return view('public.permohonan-public', compact('permohonans'));
     }
@@ -42,5 +42,26 @@ class PublicController extends Controller
         Permohonan::create($validated);
 
         return redirect()->route('public.index')->with('success', 'Permohonan berhasil disubmit!');
+    }
+
+    /**
+     * Get latest permohonan for real-time updates
+     * This endpoint is used for polling new permohonan
+     */
+    public function getLatest(Request $request)
+    {
+        $lastId = $request->query('last_id', 0);
+        
+        $permohonans = Permohonan::with(['unit'])
+            ->where('id_permohonan', '>', $lastId)
+            ->orderBy('tanggal', 'desc')
+            ->limit(10) // Limit to 10 new items at a time
+            ->get();
+        
+        return response()->json([
+            'permohonans' => $permohonans,
+            'latest_id' => $permohonans->first()?->id_permohonan ?? $lastId,
+            'count' => $permohonans->count()
+        ]);
     }
 }
