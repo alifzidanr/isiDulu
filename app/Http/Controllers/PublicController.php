@@ -12,7 +12,7 @@ class PublicController extends Controller
     {
         $permohonans = Permohonan::with(['unit'])
             ->orderBy('tanggal', 'desc')
-            ->paginate(10);
+            ->paginate(25); // Changed from 10 to 25
             
         return view('public.permohonan-public', compact('permohonans'));
     }

@@ -44,11 +44,11 @@
                                         class="text-blue-600 hover:text-blue-900 text-left">
                                     <i class="fas fa-edit mr-1"></i>Edit
                                 </button>
-                                <form action="{{ route('master.jenis-perawatan.destroy', $jenisPerawatan->id_perawatan) }}" method="POST" class="inline">
+                                <form id="deleteForm{{ $jenisPerawatan->id_perawatan }}" action="{{ route('master.jenis-perawatan.destroy', $jenisPerawatan->id_perawatan) }}" method="POST" class="inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" 
-                                            onclick="return confirm('Yakin ingin menghapus jenis perawatan ini?')"
+                                    <button type="button" 
+                                            onclick="confirmDelete({{ $jenisPerawatan->id_perawatan }}, '{{ $jenisPerawatan->nama_perawatan }}')"
                                             class="text-red-600 hover:text-red-900">
                                         <i class="fas fa-trash mr-1"></i>Delete
                                     </button>
@@ -141,8 +141,35 @@
     </div>
 </div>
 
+<!-- Delete Confirmation Dialog -->
+<div id="deleteConfirmDialog" class="fixed inset-0 bg-gray-500/75 hidden z-50">
+    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+            <div class="sm:flex sm:items-start">
+                <div class="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:size-10">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-6 text-red-600">
+                        <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                    <h3 class="text-base font-semibold text-gray-900">Hapus Jenis Perawatan</h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500" id="deleteConfirmMessage">Apakah Anda yakin ingin menghapus jenis perawatan ini? Semua data yang terkait akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <button type="button" onclick="submitDelete()" class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">Hapus</button>
+                <button type="button" onclick="closeDeleteConfirm()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Batal</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+let deleteFormId = null;
+
 function openCreateModal() {
     document.getElementById('createModal').classList.remove('hidden');
     document.body.classList.add('overflow-hidden');
@@ -166,10 +193,42 @@ function closeEditModal() {
     document.body.classList.remove('overflow-hidden');
 }
 
-// Modal event listeners (same for all)
-document.getElementById('createModal').addEventListener('click', function(e) { if (e.target === this) closeCreateModal(); });
-document.getElementById('editModal').addEventListener('click', function(e) { if (e.target === this) closeEditModal(); });
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeCreateModal(); closeEditModal(); } });
+function confirmDelete(id, nama) {
+    deleteFormId = id;
+    document.getElementById('deleteConfirmMessage').textContent = 
+        `Apakah Anda yakin ingin menghapus jenis perawatan "${nama}"? Semua data yang terkait akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.`;
+    document.getElementById('deleteConfirmDialog').classList.remove('hidden');
+}
+
+function submitDelete() {
+    if (deleteFormId) {
+        document.getElementById('deleteForm' + deleteFormId).submit();
+    }
+    closeDeleteConfirm();
+}
+
+function closeDeleteConfirm() {
+    document.getElementById('deleteConfirmDialog').classList.add('hidden');
+    deleteFormId = null;
+}
+
+// Modal event listeners
+document.getElementById('createModal').addEventListener('click', function(e) { 
+    if (e.target === this) closeCreateModal(); 
+});
+document.getElementById('editModal').addEventListener('click', function(e) { 
+    if (e.target === this) closeEditModal(); 
+});
+document.getElementById('deleteConfirmDialog').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteConfirm();
+});
+document.addEventListener('keydown', function(e) { 
+    if (e.key === 'Escape') { 
+        closeCreateModal(); 
+        closeEditModal(); 
+        closeDeleteConfirm();
+    } 
+});
 </script>
 @endpush
 @endsection

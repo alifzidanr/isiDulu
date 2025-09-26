@@ -38,10 +38,10 @@
                     <tr>
                         <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
                             @if($permohonan->status_permohonan != 3)
-                            <form action="{{ route('permohonan.status', $permohonan->id_permohonan) }}" method="POST">
+                            <form id="statusForm{{ $permohonan->id_permohonan }}" action="{{ route('permohonan.status', $permohonan->id_permohonan) }}" method="POST">
                                 @csrf
                                 @method('PATCH')
-                                <select name="status" onchange="this.form.submit()" 
+                                <select name="status" onchange="confirmStatusChange(this, {{ $permohonan->id_permohonan }})" 
                                         class="text-xs sm:text-sm border-gray-300 rounded w-full">
                                     <option value="">Action</option>
                                     @if($permohonan->status_permohonan == 0)
@@ -230,8 +230,36 @@
     </div>
 </div>
 
+<!-- Status Confirmation Dialog -->
+<div id="statusConfirmDialog" class="fixed inset-0 bg-gray-500/75 hidden z-50 transition-opacity">
+    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+            <div class="sm:flex sm:items-start">
+                <div class="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:size-10">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-6 text-blue-600">
+                        <path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </div>
+                <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                    <h3 class="text-base font-semibold text-gray-900">Konfirmasi Perubahan Status</h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500" id="statusConfirmMessage">Apakah Anda yakin ingin mengubah status permohonan ini?</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <button type="button" onclick="submitStatusChange()" class="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto">Konfirmasi</button>
+                <button type="button" onclick="cancelStatusChange()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Batal</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+let currentFormId = null;
+let currentSelect = null;
+
 function openCreateModal() {
     document.getElementById('createModal').classList.remove('hidden');
     document.body.classList.add('overflow-hidden');
@@ -242,6 +270,48 @@ function closeCreateModal() {
     document.body.classList.remove('overflow-hidden');
 }
 
+function confirmStatusChange(selectElement, permohonanId) {
+    const selectedValue = selectElement.value;
+    
+    if (!selectedValue) {
+        return;
+    }
+    
+    currentFormId = permohonanId;
+    currentSelect = selectElement;
+    
+    const statusTexts = {
+        '1': 'mengerjakan',
+        '2': 'menyelesaikan',
+        '4': 'mengesahkan',
+        '5': 'membatalkan'
+    };
+    
+    const message = `Apakah Anda yakin ingin ${statusTexts[selectedValue]} permohonan ini?`;
+    document.getElementById('statusConfirmMessage').textContent = message;
+    document.getElementById('statusConfirmDialog').classList.remove('hidden');
+}
+
+function submitStatusChange() {
+    if (currentFormId) {
+        document.getElementById('statusForm' + currentFormId).submit();
+    }
+    closeStatusConfirm();
+}
+
+function cancelStatusChange() {
+    if (currentSelect) {
+        currentSelect.value = '';
+    }
+    closeStatusConfirm();
+}
+
+function closeStatusConfirm() {
+    document.getElementById('statusConfirmDialog').classList.add('hidden');
+    currentFormId = null;
+    currentSelect = null;
+}
+
 // Close modal when clicking outside
 document.getElementById('createModal').addEventListener('click', function(e) {
     if (e.target === this) {
@@ -249,10 +319,17 @@ document.getElementById('createModal').addEventListener('click', function(e) {
     }
 });
 
+document.getElementById('statusConfirmDialog').addEventListener('click', function(e) {
+    if (e.target === this) {
+        cancelStatusChange();
+    }
+});
+
 // Close modal with Escape key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeCreateModal();
+        cancelStatusChange();
     }
 });
 </script>
