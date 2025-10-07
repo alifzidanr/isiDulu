@@ -79,4 +79,10 @@ class Permohonan extends Model
             }
         });
     }
+
+
+    public function laporan()
+    {
+        return $this->hasOne(Laporan::class, 'id_permohonan');
+    }
 }

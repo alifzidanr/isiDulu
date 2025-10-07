@@ -27,6 +27,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/permohonan', [PermohonanController::class, 'store'])->name('permohonan.store');
     Route::patch('/permohonan/{id}/status', [PermohonanController::class, 'updateStatus'])->name('permohonan.status');
     
+    Route::post('/permohonan/{id}/laporan', [PermohonanController::class, 'storeLaporan'])->name('permohonan.laporan.store');
+    Route::get('/permohonan/{id}/laporan', [PermohonanController::class, 'showLaporan'])->name('permohonan.laporan.show');
+
     Route::get('/print-permohonan', [PermohonanController::class, 'print'])->name('permohonan.print');
     Route::get('/print-permohonan/{id}', [PermohonanController::class, 'printSingle'])->name('permohonan.print.single');
     
