@@ -1,7 +1,7 @@
 <!-- resources/views/public/permohonan-public.blade.php -->
 @extends('layouts.app')
 
-@section('title', 'Permohonan Publik - isiDulu')
+@section('title', 'Permohonan Publik - HelpDesk')
 
 @section('content')
 <div class="max-w-7xl mx-auto p-4 sm:p-6">

@@ -1,7 +1,7 @@
 <!-- resources/views/auth/login.blade.php -->
 @extends('layouts.app')
 
-@section('title', 'Login - isiDulu')
+@section('title', 'Login - HelpDesk')
 
 @section('content')
 <div class="min-h-screen flex items-start justify-center bg-gray-50 pt-8 sm:pt-16 md:pt-24 pb-12 px-4 sm:px-6 lg:px-8">
@@ -12,7 +12,7 @@
                     Login
                 </h2>
                 <p class="text-sm text-gray-600">
-                    Masuk ke admin panel isiDulu
+                    Masuk ke admin panel HelpDesk
                 </p>
             </div>
             
@@ -71,7 +71,7 @@
             
             <div class="mt-6 text-center">
                 <p class="text-xs text-gray-500">
-                    © {{ date('Y') }} isiDulu. All rights reserved.
+                    © {{ date('Y') }} HelpDesk. All rights reserved.
                 </p>
             </div>
         </div>

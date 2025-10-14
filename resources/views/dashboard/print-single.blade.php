@@ -17,7 +17,7 @@
         <!-- Header -->
         <div class="text-center mb-8 border-b-2 border-gray-300 pb-4">
             <h1 class="text-2xl font-bold text-gray-900">FORM PERMOHONAN LAYANAN</h1>
-            <h2 class="text-xl font-semibold text-blue-600 mt-2">isiDulu</h2>
+            <h2 class="text-xl font-semibold text-blue-600 mt-2">HelpDesk</h2>
             <p class="text-sm text-gray-600 mt-1">Sistem Manajemen Permohonan Layanan</p>
         </div>
 
@@ -118,7 +118,7 @@
         <!-- Footer -->
         <div class="mt-8 text-center text-xs text-gray-500">
             <p>Dokumen ini dicetak pada {{ now()->format('d F Y H:i:s') }}</p>
-            <p>© {{ date('Y') }} isiDulu - Sistem Manajemen Permohonan Layanan</p>
+            <p>© {{ date('Y') }} HelpDesk - Sistem Manajemen Permohonan Layanan</p>
         </div>
     </div>
 

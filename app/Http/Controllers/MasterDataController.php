@@ -141,6 +141,7 @@ class MasterDataController extends Controller
         $request->validate([
             'nama_lengkap' => 'required|string|max:255',
             'email' => 'required|email|unique:user,email',
+            'telegram_id' => 'nullable|string|max:100|unique:user,telegram_id',
             'password' => 'required|string|min:6',
             'status' => 'required|in:active,inactive',
             'id_kampus' => 'nullable|exists:kampus,id_kampus',
@@ -162,6 +163,7 @@ class MasterDataController extends Controller
         $request->validate([
             'nama_lengkap' => 'required|string|max:255',
             'email' => 'required|email|unique:user,email,' . $id . ',id_user',
+            'telegram_id' => 'nullable|string|max:100|unique:user,telegram_id,' . $id . ',id_user',
             'status' => 'required|in:active,inactive',
             'id_kampus' => 'nullable|exists:kampus,id_kampus',
             'id_unit' => 'nullable|exists:unit,id_unit',
@@ -177,13 +179,6 @@ class MasterDataController extends Controller
 
         $user->update($data);
         return redirect()->route('master.user.index')->with('success', 'User berhasil diupdate!');
-    }
-
-    public function userDestroy($id)
-    {
-        $user = User::findOrFail($id);
-        $user->delete();
-        return redirect()->route('master.user.index')->with('success', 'User berhasil dihapus!');
     }
 
     // JENIS PERANGKAT METHODS

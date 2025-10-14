@@ -1,7 +1,7 @@
 <!-- resources/views/dashboard/print-permohonan.blade.php -->
 @extends('layouts.app')
 
-@section('title', 'Print Permohonan - isiDulu')
+@section('title', 'Print Permohonan - HelpDesk')
 
 @section('content')
 <div class="space-y-6">

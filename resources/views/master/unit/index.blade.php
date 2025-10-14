@@ -1,7 +1,7 @@
 <!-- resources/views/master/unit/index.blade.php -->
 @extends('layouts.app')
 
-@section('title', 'Master Unit - isiDulu')
+@section('title', 'Master Unit - HelpDesk')
 
 @section('content')
 <div class="space-y-4 sm:space-y-6">

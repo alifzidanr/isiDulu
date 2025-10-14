@@ -1,6 +1,6 @@
 <!-- resources/views/dashboard/permohonan.blade.php -->
 @extends('layouts.app')
-@section('title', 'Permohonan - isiDulu')
+@section('title', 'Permohonan - HelpDesk')
 @section('content')
 <div class="space-y-4 sm:space-y-6">
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">

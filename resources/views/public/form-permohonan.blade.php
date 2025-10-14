@@ -1,7 +1,7 @@
 <!-- resources/views/public/form-permohonan.blade.php -->
 @extends('layouts.app')
 
-@section('title', 'Form Permohonan - isiDulu')
+@section('title', 'Form Permohonan - HelpDesk')
 
 @section('content')
 <div class="max-w-2xl mx-auto p-4 sm:p-6">

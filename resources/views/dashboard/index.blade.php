@@ -1,7 +1,7 @@
 <!-- resources/views/dashboard/index.blade.php -->
 @extends('layouts.app')
 
-@section('title', 'Dashboard - isiDulu')
+@section('title', 'Dashboard - HelpDesk')
 
 @section('content')
 <div class="space-y-6">

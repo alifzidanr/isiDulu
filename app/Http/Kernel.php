@@ -66,7 +66,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         
-        // Custom middleware for isiDulu
+        // Custom middleware for HelpDesk
         'access.level' => \App\Http\Middleware\CheckAccessLevel::class,
     ];
 }

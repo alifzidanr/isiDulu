@@ -1,7 +1,7 @@
 <!-- resources/views/master/jenis-perangkat/index.blade.php -->
 @extends('layouts.app')
 
-@section('title', 'Master Jenis Perangkat - isiDulu')
+@section('title', 'Master Jenis Perangkat - HelpDesk')
 
 @section('content')
 <div class="space-y-4 sm:space-y-6">

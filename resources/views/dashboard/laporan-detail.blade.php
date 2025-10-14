@@ -1,7 +1,7 @@
 <!-- resources/views/dashboard/laporan-detail.blade.php -->
 @extends('layouts.app')
 
-@section('title', 'Detail Laporan - isiDulu')
+@section('title', 'Detail Laporan - HelpDesk')
 
 @section('content')
 <div class="max-w-4xl mx-auto space-y-6">

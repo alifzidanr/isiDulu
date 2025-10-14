@@ -1,7 +1,7 @@
 <!-- resources/views/master/user/index.blade.php -->
 @extends('layouts.app')
 
-@section('title', 'Master User - isiDulu')
+@section('title', 'Master User - HelpDesk')
 
 @section('content')
 <div class="space-y-4 sm:space-y-6">
@@ -27,6 +27,7 @@
                         <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
                         <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
                         <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telegram ID</th>
                         <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Access Level</th>
                         <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kampus</th>
@@ -45,6 +46,9 @@
                         <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                             {{ $user->email }}
                         </td>
+                        <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                            {{ $user->telegram_id ?? '-' }}
+                        </td>
                         <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $user->status == 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                 {{ ucfirst($user->status) }}
@@ -61,7 +65,7 @@
                         </td>
                         <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                             <div class="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
-                                <button onclick="openEditModal({{ $user->id_user }}, '{{ $user->nama_lengkap }}', '{{ $user->email }}', '{{ $user->status }}', {{ $user->id_kampus ?? 'null' }}, {{ $user->id_unit ?? 'null' }}, {{ $user->access_level }})" 
+                                <button onclick="openEditModal({{ $user->id_user }}, '{{ $user->nama_lengkap }}', '{{ $user->email }}', '{{ $user->telegram_id ?? '' }}', '{{ $user->status }}', {{ $user->id_kampus ?? 'null' }}, {{ $user->id_unit ?? 'null' }}, {{ $user->access_level }})" 
                                         class="text-blue-600 hover:text-blue-900 text-left">
                                     <i class="fas fa-edit mr-1"></i>Edit
                                 </button>
@@ -79,7 +83,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-4 sm:px-6 py-4 text-center text-gray-500">Tidak ada data user</td>
+                        <td colspan="8" class="px-4 sm:px-6 py-4 text-center text-gray-500">Tidak ada data user</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -101,7 +105,7 @@
             </button>
         </div>
         
-     <form action="{{ route('master.user.store') }}" method="POST" class="space-y-3 sm:space-y-4">
+        <form action="{{ route('master.user.store') }}" method="POST" class="space-y-3 sm:space-y-4">
             @csrf
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
                 <div>
@@ -117,6 +121,14 @@
                     <div class="mt-2">
                         <input type="email" name="email" id="email" required
                             placeholder="user@example.com"
+                            class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
+                    </div>
+                </div>
+                <div>
+                    <label for="telegram_id" class="block text-sm/6 font-medium text-gray-900">Telegram ID (Opsional)</label>
+                    <div class="mt-2">
+                        <input type="text" name="telegram_id" id="telegram_id"
+                            placeholder="Masukkan Telegram ID"
                             class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
                     </div>
                 </div>
@@ -163,7 +175,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="lg:col-span-2">
+                <div>
                     <label for="access_level" class="block text-sm/6 font-medium text-gray-900">Access Level</label>
                     <div class="mt-2">
                         <select name="access_level" id="access_level" required
@@ -222,6 +234,14 @@
                     </div>
                 </div>
                 <div>
+                    <label for="edit_telegram_id" class="block text-sm/6 font-medium text-gray-900">Telegram ID (Opsional)</label>
+                    <div class="mt-2">
+                        <input type="text" name="telegram_id" id="edit_telegram_id"
+                            placeholder="Masukkan Telegram ID"
+                            class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
+                    </div>
+                </div>
+                <div>
                     <label for="edit_password" class="block text-sm/6 font-medium text-gray-900">Password (Kosongkan jika tidak ingin mengubah)</label>
                     <div class="mt-2">
                         <input type="password" name="password" id="edit_password"
@@ -264,7 +284,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="lg:col-span-2">
+                <div>
                     <label for="edit_access_level" class="block text-sm/6 font-medium text-gray-900">Access Level</label>
                     <div class="mt-2">
                         <select name="access_level" id="edit_access_level" required
@@ -332,12 +352,13 @@ function closeCreateModal() {
     document.querySelector('#createModal form').reset();
 }
 
-function openEditModal(id, nama, email, status, kampusId, unitId, accessLevel) {
+function openEditModal(id, nama, email, telegramId, status, kampusId, unitId, accessLevel) {
     document.getElementById('editModal').classList.remove('hidden');
     document.body.classList.add('overflow-hidden');
     document.getElementById('editForm').action = `/master/user/${id}`;
     document.getElementById('edit_nama_lengkap').value = nama;
     document.getElementById('edit_email').value = email;
+    document.getElementById('edit_telegram_id').value = telegramId || '';
     document.getElementById('edit_status').value = status;
     document.getElementById('edit_id_kampus').value = kampusId || '';
     document.getElementById('edit_id_unit').value = unitId || '';
