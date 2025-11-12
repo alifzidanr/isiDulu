@@ -31,9 +31,9 @@
                     @endauth
                 </div>
                 
-                <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+               <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                     <div class="flex shrink-0 items-center">
-                        <a href="{{ route('public.index') }}" class="text-xl font-bold text-blue-600">HelpDesk</a>
+                        <a href="{{ auth()->check() ? route('dashboard') : route('public.index') }}" class="text-xl font-bold text-blue-600">HelpDesk</a>
                     </div>
                 </div>
                 
