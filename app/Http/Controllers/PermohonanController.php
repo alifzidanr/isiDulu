@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/PermohonanController.php
 
 namespace App\Http\Controllers;
 
@@ -7,10 +6,15 @@ use Illuminate\Http\Request;
 use App\Models\Permohonan;
 use App\Models\Laporan;
 use App\Models\Unit;
+use App\Models\User;
 use App\Models\JenisPerangkat;
 use App\Models\JenisPerawatan;
 use App\Models\DetailPerawatan;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\NewPermohonanNotification;
+use App\Notifications\PermohonanStatusChangedNotification;
+use App\Notifications\LaporanCreatedNotification;
 
 class PermohonanController extends Controller
 {
@@ -56,7 +60,10 @@ class PermohonanController extends Controller
         $validated['id_user'] = auth()->id();
         $validated['status_permohonan'] = 0;
 
-        Permohonan::create($validated);
+        $permohonan = Permohonan::create($validated);
+
+        // Send Telegram notifications
+        $this->sendNewPermohonanNotification($permohonan);
 
         return redirect()->route('permohonan.index')->with('success', 'Permohonan berhasil dibuat!');
     }
@@ -68,8 +75,17 @@ class PermohonanController extends Controller
         ]);
 
         $permohonan = Permohonan::findOrFail($id);
-        $permohonan->status_permohonan = $request->status;
+        
+        // Capture old status BEFORE updating
+        $oldStatus = $permohonan->status_permohonan;
+        $newStatus = $request->status;
+        
+        // Update status
+        $permohonan->status_permohonan = $newStatus;
         $permohonan->save();
+
+        // Send notification with correct old and new status
+        $this->sendStatusChangeNotification($permohonan, $oldStatus, $newStatus);
 
         return back()->with('success', 'Status permohonan berhasil diupdate!');
     }
@@ -78,12 +94,10 @@ class PermohonanController extends Controller
     {
         $permohonan = Permohonan::findOrFail($id);
         
-        // Check if user is the one who completed the request
         if ($permohonan->status_permohonan != 2) {
             return back()->with('error', 'Laporan hanya bisa dibuat untuk permohonan yang sudah selesai!');
         }
 
-        // Check if laporan already exists
         if ($permohonan->laporan) {
             return back()->with('error', 'Laporan sudah dibuat untuk permohonan ini!');
         }
@@ -100,7 +114,10 @@ class PermohonanController extends Controller
         $validated['id_permohonan'] = $id;
         $validated['created_by'] = auth()->id();
 
-        Laporan::create($validated);
+        $laporan = Laporan::create($validated);
+
+        // Send laporan created notification
+        $this->sendLaporanNotification($laporan);
 
         return redirect()->route('permohonan.index')->with('success', 'Laporan berhasil dibuat!');
     }
@@ -139,5 +156,149 @@ class PermohonanController extends Controller
     {
         $permohonan = Permohonan::with(['unit', 'subUnit'])->findOrFail($id);
         return view('dashboard.print-single', compact('permohonan'));
+    }
+
+    /**
+     * Send Telegram notification for new permohonan
+     * Sends to: 1) Group, 2) All responsible users (kampus/unit match)
+     */
+    private function sendNewPermohonanNotification(Permohonan $permohonan)
+    {
+        try {
+            $notification = new NewPermohonanNotification($permohonan);
+            
+            // 1. Send to group
+            $this->sendToGroup($notification);
+            
+            // 2. Send to all responsible users
+            $this->sendToResponsibleUsers($permohonan, $notification);
+            
+        } catch (\Exception $e) {
+            \Log::error('Telegram new permohonan notification failed', [
+                'permohonan_id' => $permohonan->id_permohonan,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Send status change notification
+     * Sends to: 1) Group, 2) All responsible users (kampus/unit match)
+     */
+    private function sendStatusChangeNotification(Permohonan $permohonan, $oldStatus, $newStatus)
+    {
+        try {
+            $notification = new PermohonanStatusChangedNotification($permohonan, $oldStatus, $newStatus);
+            
+            // 1. Send to group
+            $this->sendToGroup($notification);
+            
+            // 2. Send to all responsible users
+            $this->sendToResponsibleUsers($permohonan, $notification);
+            
+        } catch (\Exception $e) {
+            \Log::error('Telegram status notification failed', [
+                'permohonan_id' => $permohonan->id_permohonan,
+                'old_status' => $oldStatus,
+                'new_status' => $newStatus,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Send laporan created notification
+     * Sends to: 1) Group, 2) All responsible users (kampus/unit match)
+     */
+    private function sendLaporanNotification(Laporan $laporan)
+    {
+        try {
+            $notification = new LaporanCreatedNotification($laporan);
+            
+            // 1. Send to group
+            $this->sendToGroup($notification);
+            
+            // 2. Send to all responsible users
+            $laporan->load('permohonan');
+            $this->sendToResponsibleUsers($laporan->permohonan, $notification);
+            
+        } catch (\Exception $e) {
+            \Log::error('Telegram laporan notification failed', [
+                'laporan_id' => $laporan->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Send notification to Telegram group
+     */
+    private function sendToGroup($notification)
+    {
+        try {
+            $groupChatId = config('services.telegram-bot-api.group_chat_id');
+            
+            if ($groupChatId) {
+                Notification::route('telegram', $groupChatId)
+                    ->notify($notification);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to send to Telegram group', [
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Send notification to all users in charge of the kampus/unit
+     */
+    private function sendToResponsibleUsers(Permohonan $permohonan, $notification)
+    {
+        try {
+            // Load unit with kampus relationship
+            $permohonan->load('unit.kampus');
+            
+            $unitId = $permohonan->id_unit;
+            $kampusId = $permohonan->unit->id_kampus ?? null;
+            
+            // Find all users responsible for this kampus or unit
+            $responsibleUsers = User::query()
+                ->where('status', 1) // Active users only
+                ->whereNotNull('telegram_id')
+                ->where('telegram_id', '!=', '')
+                ->where(function ($query) use ($kampusId, $unitId) {
+                    // Users assigned to this specific unit
+                    $query->where('id_unit', $unitId)
+                          // OR users assigned to this kampus (campus-wide responsibility)
+                          ->orWhere('id_kampus', $kampusId);
+                })
+                ->get();
+
+            // Send to each responsible user
+            foreach ($responsibleUsers as $user) {
+                try {
+                    Notification::route('telegram', $user->telegram_id)
+                        ->notify($notification);
+                    
+                    \Log::info('Sent notification to user', [
+                        'user_id' => $user->id_user,
+                        'user_name' => $user->nama_lengkap,
+                        'telegram_id' => $user->telegram_id,
+                        'permohonan_id' => $permohonan->id_permohonan
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send to user', [
+                        'user_id' => $user->id_user,
+                        'telegram_id' => $user->telegram_id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to get responsible users', [
+                'permohonan_id' => $permohonan->id_permohonan,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 }
