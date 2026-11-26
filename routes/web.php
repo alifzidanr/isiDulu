@@ -10,7 +10,7 @@ use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\KehadiranSyncController;
 use App\Http\Controllers\PasskeyController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 // Public routes
 Route::get('/', [PublicController::class, 'index'])->name('public.index');
@@ -31,7 +31,7 @@ Route::middleware('throttle:10,1')->group(function () {
 
 // Kehadiran pushes the Direktorat TI&TD roster and passkeys here (HMAC-signed, no session)
 Route::post('/kehadiran/sync', KehadiranSyncController::class)
-    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->withoutMiddleware([PreventRequestForgery::class])
     ->middleware('throttle:30,1')
     ->name('kehadiran.sync');
 
