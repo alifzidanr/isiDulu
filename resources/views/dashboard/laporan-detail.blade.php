@@ -1,186 +1,98 @@
-<!-- resources/views/dashboard/laporan-detail.blade.php -->
 @extends('layouts.app')
 
 @section('title', 'Detail Laporan - HelpDesk')
+@section('page', 'Permohonan / Laporan')
+
+@php
+    $laporan = $permohonan->laporan;
+    $info = array_filter([
+        'Tanggal Permohonan' => $permohonan->tanggal->translatedFormat('d F Y'),
+        'Nama Pemohon' => $permohonan->nama_pemohon,
+        'Kontak' => $permohonan->kontak_pemohon,
+        'Email' => $permohonan->email_pemohon,
+        'Pimpinan' => $permohonan->pimpinan_pemohon,
+        'Unit' => trim(($permohonan->unit->nama_unit ?? '-') . ($permohonan->subUnit ? ' / ' . $permohonan->subUnit->nama_sub_unit : '')),
+        'Inventaris' => $permohonan->inventaris === 'y' ? 'Inventaris' : 'Non-Inventaris',
+    ]);
+@endphp
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-6">
-    <!-- Back Button -->
-    <div>
-        <a href="{{ route('permohonan.index') }}" class="inline-flex items-center text-blue-600 hover:text-blue-800">
-            <i class="fas fa-arrow-left mr-2"></i>
-            Kembali ke Permohonan
-        </a>
+<div class="mx-auto grid max-w-4xl gap-6">
+    <div class="no-print flex flex-wrap items-center justify-between gap-2">
+        <x-ui.button :href="route('permohonan.index')" variant="ghost" icon="arrow-left" class="-ml-3">Kembali ke Permohonan</x-ui.button>
+        <x-ui.button variant="outline" icon="printer" onclick="window.print()">Cetak Laporan</x-ui.button>
     </div>
 
-    <!-- Laporan Header -->
-    <div class="bg-white shadow rounded-lg overflow-hidden">
-        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
-            <h1 class="text-2xl font-bold text-white">Detail Laporan</h1>
-            <p class="text-blue-100 text-sm mt-1">Laporan Permohonan #{{ $permohonan->id_permohonan }}</p>
-        </div>
+    <x-ui.page-header title="Detail Laporan" :description="'Laporan untuk permohonan #' . $permohonan->id_permohonan . '.'">
+        <x-slot:actions><x-status-badge :status="$permohonan->status_permohonan" /></x-slot:actions>
+    </x-ui.page-header>
 
-        <div class="p-6">
-            <!-- Permohonan Info -->
-            <div class="mb-6 pb-6 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Informasi Permohonan</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-sm text-gray-500">Tanggal Permohonan</p>
-                        <p class="text-base font-medium text-gray-900">{{ $permohonan->tanggal->format('d F Y') }}</p>
+    <x-ui.card>
+        <x-ui.card.header>
+            <x-ui.card.title>Informasi Permohonan</x-ui.card.title>
+        </x-ui.card.header>
+        <x-ui.card.content class="grid gap-6">
+            <dl class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                @foreach ($info as $label => $value)
+                    <div class="grid gap-1">
+                        <dt class="text-muted-foreground text-sm">{{ $label }}</dt>
+                        <dd class="text-sm font-medium">{{ $value }}</dd>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Status</p>
-                        <span class="inline-flex px-3 py-1 text-sm font-semibold rounded-full 
-                            @if($permohonan->status_permohonan == 2) bg-green-100 text-green-800
-                            @elseif($permohonan->status_permohonan == 4) bg-purple-100 text-purple-800
-                            @endif">
-                            {{ $permohonan->statusText }}
-                        </span>
+                @endforeach
+            </dl>
+            <x-ui.separator />
+            <div class="grid gap-1">
+                <p class="text-muted-foreground text-sm">Keterangan Permohonan</p>
+                <p class="text-sm whitespace-pre-line">{{ $permohonan->keluhan }}</p>
+            </div>
+        </x-ui.card.content>
+    </x-ui.card>
+
+    <x-ui.card>
+        <x-ui.card.header>
+            <x-ui.card.title>Detail Pekerjaan</x-ui.card.title>
+            <x-ui.card.description>Dicatat oleh petugas saat permohonan selesai.</x-ui.card.description>
+        </x-ui.card.header>
+        <x-ui.card.content class="grid gap-4">
+            <div class="grid gap-3 sm:grid-cols-2">
+                @foreach ([
+                    ['Jenis Perangkat', $laporan->jenisPerangkat->nama_perangkat ?? '-', 'laptop'],
+                    ['Detail Perangkat', $laporan->detail_perangkat, 'info'],
+                    ['Jenis Perawatan', $laporan->jenisPerawatan->nama_perawatan ?? '-', 'wrench'],
+                    ['Detail Perawatan', $laporan->detailPerawatan->nama_detail_perawatan ?? '-', 'list-checks'],
+                ] as [$label, $value, $icon])
+                    <div class="bg-muted/50 flex items-start gap-3 rounded-lg border p-4">
+                        <x-ui.icon :name="$icon" class="text-muted-foreground mt-0.5" />
+                        <div class="grid gap-0.5">
+                            <p class="text-muted-foreground text-xs">{{ $label }}</p>
+                            <p class="text-sm font-medium">{{ $value }}</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Nama Pemohon</p>
-                        <p class="text-base font-medium text-gray-900">{{ $permohonan->nama_pemohon }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Kontak</p>
-                        <p class="text-base font-medium text-gray-900">{{ $permohonan->kontak_pemohon }}</p>
-                    </div>
-                    @if($permohonan->email_pemohon)
-                    <div>
-                        <p class="text-sm text-gray-500">Email</p>
-                        <p class="text-base font-medium text-gray-900">{{ $permohonan->email_pemohon }}</p>
-                    </div>
-                    @endif
-                    @if($permohonan->pimpinan_pemohon)
-                    <div>
-                        <p class="text-sm text-gray-500">Pimpinan</p>
-                        <p class="text-base font-medium text-gray-900">{{ $permohonan->pimpinan_pemohon }}</p>
-                    </div>
-                    @endif
-                    <div>
-                        <p class="text-sm text-gray-500">Unit</p>
-                        <p class="text-base font-medium text-gray-900">{{ $permohonan->unit->nama_unit }}</p>
-                        @if($permohonan->subUnit)
-                        <p class="text-sm text-gray-600">{{ $permohonan->subUnit->nama_sub_unit }}</p>
-                        @endif
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Inventaris</p>
-                        <p class="text-base font-medium text-gray-900">
-                            {{ $permohonan->inventaris == 'y' ? 'Inventaris' : 'Non-Inventaris' }}
-                        </p>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <p class="text-sm text-gray-500">Keterangan Permohonan</p>
-                    <p class="text-base text-gray-900 mt-1">{{ $permohonan->keluhan }}</p>
-                </div>
+                @endforeach
             </div>
 
-            <!-- Laporan Info -->
-            <div class="mb-6 pb-6 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Detail Laporan Pekerjaan</h2>
-                <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <p class="text-sm text-gray-500 mb-1">Jenis Perangkat</p>
-                            <p class="text-base font-medium text-gray-900">{{ $permohonan->laporan->jenisPerangkat->nama_perangkat }}</p>
-                        </div>
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <p class="text-sm text-gray-500 mb-1">Detail Perangkat</p>
-                            <p class="text-base font-medium text-gray-900">{{ $permohonan->laporan->detail_perangkat }}</p>
-                        </div>
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <p class="text-sm text-gray-500 mb-1">Jenis Perawatan</p>
-                            <p class="text-base font-medium text-gray-900">{{ $permohonan->laporan->jenisPerawatan->nama_perawatan }}</p>
-                        </div>
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <p class="text-sm text-gray-500 mb-1">Detail Perawatan</p>
-                            <p class="text-base font-medium text-gray-900">{{ $permohonan->laporan->detailPerawatan->nama_detail_perawatan }}</p>
-                        </div>
-                    </div>
+            <div class="grid gap-1 rounded-lg border p-4">
+                <p class="text-sm font-medium">Uraian Pekerjaan</p>
+                <p class="text-muted-foreground text-sm whitespace-pre-line">{{ $laporan->uraian_pekerjaan }}</p>
+            </div>
 
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                        <p class="text-sm text-gray-700 font-medium mb-2">Uraian Pekerjaan</p>
-                        <p class="text-base text-gray-900 whitespace-pre-line">{{ $permohonan->laporan->uraian_pekerjaan }}</p>
-                    </div>
-
-                    @if($permohonan->laporan->catatan)
-                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                        <p class="text-sm text-gray-700 font-medium mb-2">
-                            <i class="fas fa-sticky-note text-yellow-600 mr-1"></i>
-                            Catatan
-                        </p>
-                        <p class="text-base text-gray-900 whitespace-pre-line">{{ $permohonan->laporan->catatan }}</p>
-                    </div>
-                    @endif
+            @if ($laporan->catatan)
+                <x-ui.alert icon="sticky-note" title="Catatan">
+                    <span class="whitespace-pre-line">{{ $laporan->catatan }}</span>
+                </x-ui.alert>
+            @endif
+        </x-ui.card.content>
+        <x-ui.card.footer class="border-t pt-6">
+            <div class="flex items-center gap-3">
+                <x-ui.avatar :name="$laporan->creator->nama_lengkap ?? '?'" size="size-10" />
+                <div class="grid gap-0.5">
+                    <p class="text-sm font-medium">{{ $laporan->creator->nama_lengkap ?? 'Petugas' }}</p>
+                    <p class="text-muted-foreground text-xs">
+                        {{ $laporan->creator->email ?? '' }} · Dibuat {{ $laporan->created_at->translatedFormat('d F Y, H:i') }}
+                    </p>
                 </div>
             </div>
-
-            <!-- Petugas Info -->
-            <div>
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Yang Menyelesaikan</h2>
-                <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-lg">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                                <i class="fas fa-user text-white text-xl"></i>
-                            </div>
-                        </div>
-                        <div class="ml-4">
-                            <p class="text-base font-semibold text-gray-900">{{ $permohonan->laporan->creator->nama_user }}</p>
-                            <p class="text-sm text-gray-600">{{ $permohonan->laporan->creator->email }}</p>
-                            <p class="text-xs text-gray-500 mt-1">
-                                <i class="far fa-calendar mr-1"></i>
-                                Dibuat: {{ $permohonan->laporan->created_at->format('d F Y, H:i') }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="mt-6 flex flex-col sm:flex-row gap-3">
-                <button onclick="window.print()" 
-                        class="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                    <i class="fas fa-print mr-2"></i>
-                    Cetak Laporan
-                </button>
-                <a href="{{ route('permohonan.index') }}" 
-                   class="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Kembali
-                </a>
-            </div>
-        </div>
-    </div>
+        </x-ui.card.footer>
+    </x-ui.card>
 </div>
-
-@push('styles')
-<style>
-@media print {
-    body * {
-        visibility: hidden;
-    }
-    .max-w-4xl, .max-w-4xl * {
-        visibility: visible;
-    }
-    .max-w-4xl {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-    }
-    button, a[href*="permohonan"] {
-        display: none !important;
-    }
-    .bg-gradient-to-r {
-        background: #2563eb !important;
-        print-color-adjust: exact;
-        -webkit-print-color-adjust: exact;
-    }
-}
-</style>
-@endpush
 @endsection

@@ -1,264 +1,92 @@
-<!-- resources/views/master/unit/index.blade.php -->
 @extends('layouts.app')
 
 @section('title', 'Master Unit - HelpDesk')
+@section('page', 'Master Data / Unit')
+
+@php
+    $kampusOptions = $kampuses->pluck('nama_kampus', 'id_kampus');
+@endphp
 
 @section('content')
-<div class="space-y-4 sm:space-y-6">
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
-        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Master Unit</h1>
-        <button onclick="openCreateModal()" 
-                class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto">
-            <i class="fas fa-plus mr-2"></i>Tambah Unit
-        </button>
-    </div>
-    
-    @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-        {{ session('success') }}
-    </div>
-    @endif
-    
-    <div class="bg-white shadow rounded-lg overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Unit</th>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kampus</th>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($units as $index => $unit)
-                    <tr>
-                        <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
-                            {{ $units->firstItem() + $index }}
-                        </td>
-                        <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
-                            {{ $unit->nama_unit }}
-                        </td>
-                        <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                            {{ $unit->kampus->nama_kampus ?? '-' }}
-                        </td>
-                        <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                            <div class="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
-                                <button onclick="openEditModal({{ $unit->id_unit }}, '{{ $unit->nama_unit }}', {{ $unit->id_kampus }})" 
-                                        class="text-blue-600 hover:text-blue-900 text-left">
-                                    <i class="fas fa-edit mr-1"></i>Edit
-                                </button>
-                                <form id="deleteForm{{ $unit->id_unit }}" action="{{ route('master.unit.destroy', $unit->id_unit) }}" method="POST" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" 
-                                            onclick="confirmDelete({{ $unit->id_unit }}, '{{ $unit->nama_unit }}')"
-                                            class="text-red-600 hover:text-red-900">
-                                        <i class="fas fa-trash mr-1"></i>Delete
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="4" class="px-4 sm:px-6 py-4 text-center text-gray-500">Tidak ada data unit</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div class="px-4 sm:px-6 py-4 bg-gray-50">
-            {{ $units->links() }}
-        </div>
-    </div>
-</div>
+<div class="grid gap-6"
+     x-data="crud({ updateUrl: @js(route('master.unit.update', '__ID__')), reopen: @js(old('_form')), old: @js(session()->getOldInput()) })">
 
-<!-- Create Modal -->
-<div id="createModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
-    <div class="relative top-4 sm:top-20 mx-auto p-4 sm:p-5 border w-11/12 sm:w-96 shadow-lg rounded-md bg-white max-h-screen overflow-y-auto">
-        <div class="flex justify-between items-center pb-3">
-            <h3 class="text-lg sm:text-xl font-bold text-gray-900">Tambah Unit</h3>
-            <button onclick="closeCreateModal()" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        
-        <form action="{{ route('master.unit.store') }}" method="POST" class="space-y-3 sm:space-y-4">
+    <x-ui.page-header title="Unit" description="Unit kerja di setiap kampus.">
+        <x-slot:actions>
+            <x-ui.button icon="plus" x-on:click="openCreate()">Tambah Unit</x-ui.button>
+        </x-slot:actions>
+    </x-ui.page-header>
+
+    <x-ui.card flush>
+        <x-ui.table>
+            <x-ui.table.header>
+                <x-ui.table.head class="w-16">No</x-ui.table.head>
+                <x-ui.table.head>Nama Unit</x-ui.table.head>
+                <x-ui.table.head>Kampus</x-ui.table.head>
+                <x-ui.table.head class="w-16 text-right"><span class="sr-only">Aksi</span></x-ui.table.head>
+            </x-ui.table.header>
+            <x-ui.table.body>
+                @forelse ($units as $index => $unit)
+                    <x-ui.table.row>
+                        <x-ui.table.cell class="text-muted-foreground tabular-nums">{{ $units->firstItem() + $index }}</x-ui.table.cell>
+                        <x-ui.table.cell class="font-medium">{{ $unit->nama_unit }}</x-ui.table.cell>
+                        <x-ui.table.cell>
+                            @if ($unit->kampus)
+                                <x-ui.badge variant="secondary">{{ $unit->kampus->nama_kampus }}</x-ui.badge>
+                            @else
+                                <span class="text-muted-foreground">—</span>
+                            @endif
+                        </x-ui.table.cell>
+                        <x-ui.table.cell class="text-right">
+                            <x-row-actions
+                                :edit="['id' => $unit->id_unit, 'nama_unit' => $unit->nama_unit, 'id_kampus' => $unit->id_kampus]"
+                                :destroy="route('master.unit.destroy', $unit->id_unit)"
+                                :confirm="'Hapus unit “' . $unit->nama_unit . '”?'" />
+                        </x-ui.table.cell>
+                    </x-ui.table.row>
+                @empty
+                    <x-ui.table.empty colspan="4" title="Belum ada unit" description="Klik Tambah Unit untuk membuat data pertama." icon="network" />
+                @endforelse
+            </x-ui.table.body>
+        </x-ui.table>
+        @if ($units->hasPages())
+            <div class="border-t px-6 py-4">{{ $units->links() }}</div>
+        @endif
+    </x-ui.card>
+
+    <x-ui.dialog model="createOpen" title="Tambah Unit" size="sm">
+        <form id="createForm" method="POST" action="{{ route('master.unit.store') }}" class="grid gap-4">
             @csrf
-            <div>
-                <label for="nama_unit" class="block text-sm/6 font-medium text-gray-900">Nama Unit</label>
-                <div class="mt-2">
-                    <input type="text" name="nama_unit" id="nama_unit" required
-                        placeholder="Masukkan nama unit"
-                        class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
-                </div>
-            </div>
-            <div>
-                <label for="id_kampus" class="block text-sm/6 font-medium text-gray-900">Kampus</label>
-                <div class="mt-2">
-                    <select name="id_kampus" id="id_kampus" required
-                        class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
-                        <option value="">Pilih Kampus</option>
-                        @foreach($kampuses as $kampus)
-                            <option value="{{ $kampus->id_kampus }}">{{ $kampus->nama_kampus }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <div class="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4">
-                <button type="button" onclick="closeCreateModal()" 
-                        class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 text-center sm:text-left">
-                    Batal
-                </button>
-                <button type="submit" 
-                        class="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
-                    Simpan
-                </button>
-            </div>
+            <input type="hidden" name="_form" value="create">
+            <x-ui.field label="Nama Unit" for="nama_unit" name="nama_unit" form="create" required>
+                <x-ui.input id="nama_unit" name="nama_unit" x-model="form.nama_unit" placeholder="Masukkan nama unit" required />
+            </x-ui.field>
+            <x-ui.field label="Kampus" for="id_kampus" name="id_kampus" form="create" required>
+                <x-ui.select id="id_kampus" name="id_kampus" x-model="form.id_kampus" placeholder="Pilih kampus" :options="$kampusOptions" required />
+            </x-ui.field>
         </form>
-    </div>
-</div>
+        <x-slot:footer>
+            <x-ui.button variant="outline" x-on:click="createOpen = false">Batal</x-ui.button>
+            <x-ui.button type="submit" form="createForm">Simpan</x-ui.button>
+        </x-slot:footer>
+    </x-ui.dialog>
 
-<!-- Edit Modal -->
-<div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
-    <div class="relative top-4 sm:top-20 mx-auto p-4 sm:p-5 border w-11/12 sm:w-96 shadow-lg rounded-md bg-white max-h-screen overflow-y-auto">
-        <div class="flex justify-between items-center pb-3">
-            <h3 class="text-lg sm:text-xl font-bold text-gray-900">Edit Unit</h3>
-            <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        
-        <form id="editForm" method="POST" class="space-y-3 sm:space-y-4">
+    <x-ui.dialog model="editOpen" title="Edit Unit" size="sm">
+        <form id="editForm" method="POST" x-bind:action="editAction" class="grid gap-4">
             @csrf
             @method('PUT')
-            <div>
-                <label for="edit_nama_unit" class="block text-sm/6 font-medium text-gray-900">Nama Unit</label>
-                <div class="mt-2">
-                    <input type="text" name="nama_unit" id="edit_nama_unit" required
-                        placeholder="Masukkan nama unit"
-                        class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
-                </div>
-            </div>
-            <div>
-                <label for="edit_id_kampus" class="block text-sm/6 font-medium text-gray-900">Kampus</label>
-                <div class="mt-2">
-                    <select name="id_kampus" id="edit_id_kampus" required
-                        class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
-                        <option value="">Pilih Kampus</option>
-                        @foreach($kampuses as $kampus)
-                            <option value="{{ $kampus->id_kampus }}">{{ $kampus->nama_kampus }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <div class="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4">
-                <button type="button" onclick="closeEditModal()" 
-                        class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 text-center sm:text-left">
-                    Batal
-                </button>
-                <button type="submit" 
-                        class="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
-                    Update
-                </button>
-            </div>
+            <input type="hidden" name="_form" x-bind:value="'edit:' + editing.id">
+            <x-ui.field label="Nama Unit" for="edit_nama_unit" name="nama_unit" form="edit" required>
+                <x-ui.input id="edit_nama_unit" name="nama_unit" x-model="editing.nama_unit" required />
+            </x-ui.field>
+            <x-ui.field label="Kampus" for="edit_id_kampus" name="id_kampus" form="edit" required>
+                <x-ui.select id="edit_id_kampus" name="id_kampus" x-model="editing.id_kampus" placeholder="Pilih kampus" :options="$kampusOptions" required />
+            </x-ui.field>
         </form>
-    </div>
+        <x-slot:footer>
+            <x-ui.button variant="outline" x-on:click="editOpen = false">Batal</x-ui.button>
+            <x-ui.button type="submit" form="editForm">Simpan Perubahan</x-ui.button>
+        </x-slot:footer>
+    </x-ui.dialog>
 </div>
-
-<!-- Delete Confirmation Dialog -->
-<div id="deleteConfirmDialog" class="fixed inset-0 bg-gray-500/75 hidden z-50">
-    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-        <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-            <div class="sm:flex sm:items-start">
-                <div class="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:size-10">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-6 text-red-600">
-                        <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </div>
-                <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                    <h3 class="text-base font-semibold text-gray-900">Hapus Unit</h3>
-                    <div class="mt-2">
-                        <p class="text-sm text-gray-500" id="deleteConfirmMessage">Apakah Anda yakin ingin menghapus unit ini? Semua data yang terkait akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                <button type="button" onclick="submitDelete()" class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">Hapus</button>
-                <button type="button" onclick="closeDeleteConfirm()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Batal</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-@push('scripts')
-<script>
-let deleteFormId = null;
-
-function openCreateModal() {
-    document.getElementById('createModal').classList.remove('hidden');
-    document.body.classList.add('overflow-hidden');
-}
-
-function closeCreateModal() {
-    document.getElementById('createModal').classList.add('hidden');
-    document.body.classList.remove('overflow-hidden');
-    document.getElementById('nama_unit').value = '';
-    document.getElementById('id_kampus').value = '';
-}
-
-function openEditModal(id, nama, kampusId) {
-    document.getElementById('editModal').classList.remove('hidden');
-    document.body.classList.add('overflow-hidden');
-    document.getElementById('editForm').action = `/master/unit/${id}`;
-    document.getElementById('edit_nama_unit').value = nama;
-    document.getElementById('edit_id_kampus').value = kampusId;
-}
-
-function closeEditModal() {
-    document.getElementById('editModal').classList.add('hidden');
-    document.body.classList.remove('overflow-hidden');
-}
-
-function confirmDelete(id, nama) {
-    deleteFormId = id;
-    document.getElementById('deleteConfirmMessage').textContent = 
-        `Apakah Anda yakin ingin menghapus unit "${nama}"? Semua data yang terkait akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.`;
-    document.getElementById('deleteConfirmDialog').classList.remove('hidden');
-}
-
-function submitDelete() {
-    if (deleteFormId) {
-        document.getElementById('deleteForm' + deleteFormId).submit();
-    }
-    closeDeleteConfirm();
-}
-
-function closeDeleteConfirm() {
-    document.getElementById('deleteConfirmDialog').classList.add('hidden');
-    deleteFormId = null;
-}
-
-// Modal event listeners
-document.getElementById('createModal').addEventListener('click', function(e) {
-    if (e.target === this) closeCreateModal();
-});
-document.getElementById('editModal').addEventListener('click', function(e) {
-    if (e.target === this) closeEditModal();
-});
-document.getElementById('deleteConfirmDialog').addEventListener('click', function(e) {
-    if (e.target === this) closeDeleteConfirm();
-});
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeCreateModal();
-        closeEditModal();
-        closeDeleteConfirm();
-    }
-});
-</script>
-@endpush
 @endsection

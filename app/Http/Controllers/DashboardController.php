@@ -50,6 +50,14 @@ class DashboardController extends Controller
             ->groupBy('status_permohonan')
             ->get();
 
-        return view('dashboard.index', compact('stats', 'statusData'));
+        $recent = Permohonan::with('unit')
+            ->when(!$user->isSuperAdmin(), function ($query) use ($user) {
+                return $query->whereIn('id_unit', Unit::where('id_kampus', $user->id_kampus)->pluck('id_unit'));
+            })
+            ->orderByDesc('id_permohonan')
+            ->limit(5)
+            ->get();
+
+        return view('dashboard.index', compact('stats', 'statusData', 'recent'));
     }
 }

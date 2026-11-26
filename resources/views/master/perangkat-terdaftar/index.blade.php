@@ -1,317 +1,97 @@
-<!-- resources/views/master/perangkat-terdaftar/index.blade.php -->
 @extends('layouts.app')
 
 @section('title', 'Master Perangkat Terdaftar - HelpDesk')
+@section('page', 'Master Data / Perangkat Terdaftar')
+
+@php
+    $jenisOptions = $jenisPerangkats->pluck('nama_perangkat', 'id_jenis_perangkat');
+    $inventarisOptions = ['y' => 'Inventaris', 'n' => 'Non-Inventaris'];
+@endphp
 
 @section('content')
-<div class="space-y-4 sm:space-y-6">
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
-        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Master Perangkat Terdaftar</h1>
-        <button onclick="openCreateModal()" 
-                class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto">
-            <i class="fas fa-plus mr-2"></i>Tambah Perangkat
-        </button>
-    </div>
-    
-    @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-        {{ session('success') }}
-    </div>
-    @endif
-    
-    <div class="bg-white shadow rounded-lg overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Perangkat</th>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis</th>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pengguna</th>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inventaris</th>
-                        <th class="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($perangkatTerdaftars as $index => $perangkat)
-                    <tr>
-                        <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
-                            {{ $perangkatTerdaftars->firstItem() + $index }}
-                        </td>
-                        <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
-                            {{ $perangkat->nama_perangkat_terdaftar }}
-                        </td>
-                        <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                            {{ $perangkat->jenisPerangkat->nama_perangkat ?? '-' }}
-                        </td>
-                        <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                            {{ $perangkat->pengguna ?? '-' }}
-                        </td>
-                        <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $perangkat->inventaris == 'y' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                {{ $perangkat->inventaris == 'y' ? 'Inventaris' : 'Non-Inventaris' }}
-                            </span>
-                        </td>
-                        <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                            <div class="flex flex-col sm:flex-row sm:space-x-2 space-y-2 sm:space-y-0">
-                                <button onclick="openEditModal({{ $perangkat->id_perangkat_terdaftar }}, '{{ $perangkat->nama_perangkat_terdaftar }}', {{ $perangkat->id_jenis_perangkat }}, '{{ $perangkat->pengguna }}', '{{ $perangkat->inventaris }}')" 
-                                        class="text-blue-600 hover:text-blue-900 text-left">
-                                    <i class="fas fa-edit mr-1"></i>Edit
-                                </button>
-                                <form id="deleteForm{{ $perangkat->id_perangkat_terdaftar }}" action="{{ route('master.perangkat-terdaftar.destroy', $perangkat->id_perangkat_terdaftar) }}" method="POST" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="button" 
-                                            onclick="confirmDelete({{ $perangkat->id_perangkat_terdaftar }}, '{{ $perangkat->nama_perangkat_terdaftar }}')"
-                                            class="text-red-600 hover:text-red-900">
-                                        <i class="fas fa-trash mr-1"></i>Delete
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="px-4 sm:px-6 py-4 text-center text-gray-500">Tidak ada data perangkat terdaftar</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div class="px-4 sm:px-6 py-4 bg-gray-50">
-            {{ $perangkatTerdaftars->links() }}
-        </div>
-    </div>
+<div class="grid gap-6"
+     x-data="crud({ updateUrl: @js(route('master.perangkat-terdaftar.update', '__ID__')), reopen: @js(old('_form')), old: @js(session()->getOldInput()) })">
+
+    <x-ui.page-header title="Perangkat Terdaftar" description="Perangkat yang tercatat beserta penggunanya.">
+        <x-slot:actions>
+            <x-ui.button icon="plus" x-on:click="openCreate()">Tambah Perangkat</x-ui.button>
+        </x-slot:actions>
+    </x-ui.page-header>
+
+    <x-ui.card flush>
+        <x-ui.table>
+            <x-ui.table.header>
+                <x-ui.table.head class="w-16">No</x-ui.table.head>
+                <x-ui.table.head>Nama Perangkat</x-ui.table.head>
+                <x-ui.table.head>Jenis</x-ui.table.head>
+                <x-ui.table.head>Pengguna</x-ui.table.head>
+                <x-ui.table.head>Inventaris</x-ui.table.head>
+                <x-ui.table.head class="w-16 text-right"><span class="sr-only">Aksi</span></x-ui.table.head>
+            </x-ui.table.header>
+            <x-ui.table.body>
+                @forelse ($perangkatTerdaftars as $index => $perangkat)
+                    <x-ui.table.row>
+                        <x-ui.table.cell class="text-muted-foreground tabular-nums">{{ $perangkatTerdaftars->firstItem() + $index }}</x-ui.table.cell>
+                        <x-ui.table.cell class="font-medium">{{ $perangkat->nama_perangkat_terdaftar }}</x-ui.table.cell>
+                        <x-ui.table.cell>{{ $perangkat->jenisPerangkat->nama_perangkat ?? '—' }}</x-ui.table.cell>
+                        <x-ui.table.cell>{{ $perangkat->pengguna ?: '—' }}</x-ui.table.cell>
+                        <x-ui.table.cell>
+                            <x-ui.badge :variant="$perangkat->inventaris === 'y' ? 'success' : 'muted'">
+                                {{ $perangkat->inventaris === 'y' ? 'Inventaris' : 'Non-Inventaris' }}
+                            </x-ui.badge>
+                        </x-ui.table.cell>
+                        <x-ui.table.cell class="text-right">
+                            <x-row-actions
+                                :edit="[
+                                    'id' => $perangkat->id_perangkat_terdaftar,
+                                    'nama_perangkat_terdaftar' => $perangkat->nama_perangkat_terdaftar,
+                                    'id_jenis_perangkat' => $perangkat->id_jenis_perangkat,
+                                    'pengguna' => $perangkat->pengguna,
+                                    'inventaris' => $perangkat->inventaris,
+                                ]"
+                                :destroy="route('master.perangkat-terdaftar.destroy', $perangkat->id_perangkat_terdaftar)"
+                                :confirm="'Hapus perangkat “' . $perangkat->nama_perangkat_terdaftar . '”?'" />
+                        </x-ui.table.cell>
+                    </x-ui.table.row>
+                @empty
+                    <x-ui.table.empty colspan="6" title="Belum ada perangkat terdaftar" description="Klik Tambah Perangkat untuk membuat data pertama." icon="clipboard-list" />
+                @endforelse
+            </x-ui.table.body>
+        </x-ui.table>
+        @if ($perangkatTerdaftars->hasPages())
+            <div class="border-t px-6 py-4">{{ $perangkatTerdaftars->links() }}</div>
+        @endif
+    </x-ui.card>
+
+    @foreach (['create' => ['createOpen', 'form', 'Tambah Perangkat', 'Simpan'], 'edit' => ['editOpen', 'editing', 'Edit Perangkat', 'Simpan Perubahan']] as $mode => [$open, $model, $heading, $submit])
+        <x-ui.dialog :model="$open" :title="$heading" size="lg">
+            <form id="{{ $mode }}Form" method="POST" class="grid gap-4 sm:grid-cols-2"
+                  @if ($mode === 'create') action="{{ route('master.perangkat-terdaftar.store') }}" @else x-bind:action="editAction" @endif>
+                @csrf
+                @if ($mode === 'edit')
+                    @method('PUT')
+                    <input type="hidden" name="_form" x-bind:value="'edit:' + editing.id">
+                @else
+                    <input type="hidden" name="_form" value="create">
+                @endif
+                <x-ui.field label="Nama Perangkat" for="{{ $mode }}_nama" name="nama_perangkat_terdaftar" :form="$mode" required>
+                    <x-ui.input id="{{ $mode }}_nama" name="nama_perangkat_terdaftar" x-model="{{ $model }}.nama_perangkat_terdaftar" placeholder="Misal: Laptop Lab 01" required />
+                </x-ui.field>
+                <x-ui.field label="Jenis Perangkat" for="{{ $mode }}_jenis" name="id_jenis_perangkat" :form="$mode" required>
+                    <x-ui.select id="{{ $mode }}_jenis" name="id_jenis_perangkat" x-model="{{ $model }}.id_jenis_perangkat" placeholder="Pilih jenis perangkat" :options="$jenisOptions" required />
+                </x-ui.field>
+                <x-ui.field label="Pengguna" for="{{ $mode }}_pengguna" name="pengguna" :form="$mode">
+                    <x-ui.input id="{{ $mode }}_pengguna" name="pengguna" x-model="{{ $model }}.pengguna" placeholder="Nama pengguna (opsional)" />
+                </x-ui.field>
+                <x-ui.field label="Status Inventaris" for="{{ $mode }}_inventaris" name="inventaris" :form="$mode" required>
+                    <x-ui.select id="{{ $mode }}_inventaris" name="inventaris" x-model="{{ $model }}.inventaris" placeholder="Pilih status" :options="$inventarisOptions" required />
+                </x-ui.field>
+            </form>
+            <x-slot:footer>
+                <x-ui.button variant="outline" x-on:click="{{ $open }} = false">Batal</x-ui.button>
+                <x-ui.button type="submit" form="{{ $mode }}Form">{{ $submit }}</x-ui.button>
+            </x-slot:footer>
+        </x-ui.dialog>
+    @endforeach
 </div>
-
-<!-- Create Modal -->
-<div id="createModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
-    <div class="relative top-4 sm:top-20 mx-auto p-4 sm:p-5 border w-11/12 lg:w-1/2 shadow-lg rounded-md bg-white max-h-screen overflow-y-auto">
-        <div class="flex justify-between items-center pb-3">
-            <h3 class="text-lg sm:text-xl font-bold text-gray-900">Tambah Perangkat Terdaftar</h3>
-            <button onclick="closeCreateModal()" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        
-        <form action="{{ route('master.perangkat-terdaftar.store') }}" method="POST" class="space-y-3 sm:space-y-4">
-            @csrf
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                    <label for="nama_perangkat_terdaftar" class="block text-sm/6 font-medium text-gray-900">Nama Perangkat</label>
-                    <div class="mt-2">
-                        <input type="text" name="nama_perangkat_terdaftar" id="nama_perangkat_terdaftar" required
-                            placeholder="Masukkan nama perangkat"
-                            class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
-                    </div>
-                </div>
-                <div>
-                    <label for="id_jenis_perangkat" class="block text-sm/6 font-medium text-gray-900">Jenis Perangkat</label>
-                    <div class="mt-2">
-                        <select name="id_jenis_perangkat" id="id_jenis_perangkat" required
-                            class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
-                            <option value="">Pilih Jenis Perangkat</option>
-                            @foreach($jenisPerangkats as $jenisPerangkat)
-                                <option value="{{ $jenisPerangkat->id_jenis_perangkat }}">{{ $jenisPerangkat->nama_perangkat }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label for="pengguna" class="block text-sm/6 font-medium text-gray-900">Pengguna</label>
-                    <div class="mt-2">
-                        <input type="text" name="pengguna" id="pengguna"
-                            placeholder="Masukkan nama pengguna"
-                            class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
-                    </div>
-                </div>
-                <div>
-                    <label for="inventaris" class="block text-sm/6 font-medium text-gray-900">Status Inventaris</label>
-                    <div class="mt-2">
-                        <select name="inventaris" id="inventaris" required
-                            class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
-                            <option value="">Pilih Status</option>
-                            <option value="y">Inventaris</option>
-                            <option value="n">Non-Inventaris</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4">
-                <button type="button" onclick="closeCreateModal()" 
-                        class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 text-center sm:text-left">
-                    Batal
-                </button>
-                <button type="submit" 
-                        class="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
-                    Simpan
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Edit Modal -->
-<div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
-    <div class="relative top-4 sm:top-20 mx-auto p-4 sm:p-5 border w-11/12 lg:w-1/2 shadow-lg rounded-md bg-white max-h-screen overflow-y-auto">
-        <div class="flex justify-between items-center pb-3">
-            <h3 class="text-lg sm:text-xl font-bold text-gray-900">Edit Perangkat Terdaftar</h3>
-            <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-        
-        <form id="editForm" method="POST" class="space-y-3 sm:space-y-4">
-            @csrf
-            @method('PUT')
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                    <label for="edit_nama_perangkat_terdaftar" class="block text-sm/6 font-medium text-gray-900">Nama Perangkat</label>
-                    <div class="mt-2">
-                        <input type="text" name="nama_perangkat_terdaftar" id="edit_nama_perangkat_terdaftar" required
-                            placeholder="Masukkan nama perangkat"
-                            class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
-                    </div>
-                </div>
-                <div>
-                    <label for="edit_id_jenis_perangkat" class="block text-sm/6 font-medium text-gray-900">Jenis Perangkat</label>
-                    <div class="mt-2">
-                        <select name="id_jenis_perangkat" id="edit_id_jenis_perangkat" required
-                            class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
-                            <option value="">Pilih Jenis Perangkat</option>
-                            @foreach($jenisPerangkats as $jenisPerangkat)
-                                <option value="{{ $jenisPerangkat->id_jenis_perangkat }}">{{ $jenisPerangkat->nama_perangkat }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label for="edit_pengguna" class="block text-sm/6 font-medium text-gray-900">Pengguna</label>
-                    <div class="mt-2">
-                        <input type="text" name="pengguna" id="edit_pengguna"
-                            placeholder="Masukkan nama pengguna"
-                            class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
-                    </div>
-                </div>
-                <div>
-                    <label for="edit_inventaris" class="block text-sm/6 font-medium text-gray-900">Status Inventaris</label>
-                    <div class="mt-2">
-                        <select name="inventaris" id="edit_inventaris" required
-                            class="block w-full rounded-md bg-white px-3 py-2 sm:py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
-                            <option value="">Pilih Status</option>
-                            <option value="y">Inventaris</option>
-                            <option value="n">Non-Inventaris</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex flex-col sm:flex-row sm:justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4">
-                <button type="button" onclick="closeEditModal()" 
-                        class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 text-center sm:text-left">
-                    Batal
-                </button>
-                <button type="submit" 
-                      class="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
-                    Update
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Delete Confirmation Dialog -->
-<div id="deleteConfirmDialog" class="fixed inset-0 bg-gray-500/75 hidden z-50">
-    <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-        <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-            <div class="sm:flex sm:items-start">
-                <div class="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:size-10">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-6 text-red-600">
-                        <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </div>
-                <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                    <h3 class="text-base font-semibold text-gray-900">Hapus Perangkat</h3>
-                    <div class="mt-2">
-                        <p class="text-sm text-gray-500" id="deleteConfirmMessage">Apakah Anda yakin ingin menghapus perangkat ini? Semua data yang terkait akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                <button type="button" onclick="submitDelete()" class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">Hapus</button>
-                <button type="button" onclick="closeDeleteConfirm()" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">Batal</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-@push('scripts')
-<script>
-let deleteFormId = null;
-
-function openCreateModal() {
-    document.getElementById('createModal').classList.remove('hidden');
-    document.body.classList.add('overflow-hidden');
-}
-
-function closeCreateModal() {
-    document.getElementById('createModal').classList.add('hidden');
-    document.body.classList.remove('overflow-hidden');
-    document.querySelector('#createModal form').reset();
-}
-
-function openEditModal(id, nama, jenisId, pengguna, inventaris) {
-    document.getElementById('editModal').classList.remove('hidden');
-    document.body.classList.add('overflow-hidden');
-    document.getElementById('editForm').action = `/master/perangkat-terdaftar/${id}`;
-    document.getElementById('edit_nama_perangkat_terdaftar').value = nama;
-    document.getElementById('edit_id_jenis_perangkat').value = jenisId;
-    document.getElementById('edit_pengguna').value = pengguna || '';
-    document.getElementById('edit_inventaris').value = inventaris;
-}
-
-function closeEditModal() {
-    document.getElementById('editModal').classList.add('hidden');
-    document.body.classList.remove('overflow-hidden');
-}
-
-function confirmDelete(id, nama) {
-    deleteFormId = id;
-    document.getElementById('deleteConfirmMessage').textContent = 
-        `Apakah Anda yakin ingin menghapus perangkat "${nama}"? Semua data yang terkait akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.`;
-    document.getElementById('deleteConfirmDialog').classList.remove('hidden');
-}
-
-function submitDelete() {
-    if (deleteFormId) {
-        document.getElementById('deleteForm' + deleteFormId).submit();
-    }
-    closeDeleteConfirm();
-}
-
-function closeDeleteConfirm() {
-    document.getElementById('deleteConfirmDialog').classList.add('hidden');
-    deleteFormId = null;
-}
-
-// Modal event listeners
-document.getElementById('createModal').addEventListener('click', function(e) { 
-    if (e.target === this) closeCreateModal(); 
-});
-document.getElementById('editModal').addEventListener('click', function(e) { 
-    if (e.target === this) closeEditModal(); 
-});
-document.getElementById('deleteConfirmDialog').addEventListener('click', function(e) {
-    if (e.target === this) closeDeleteConfirm();
-});
-document.addEventListener('keydown', function(e) { 
-    if (e.key === 'Escape') { 
-        closeCreateModal(); 
-        closeEditModal(); 
-        closeDeleteConfirm();
-    } 
-});
-</script>
-@endpush
 @endsection

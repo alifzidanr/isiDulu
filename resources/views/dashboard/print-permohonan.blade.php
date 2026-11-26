@@ -1,72 +1,52 @@
-<!-- resources/views/dashboard/print-permohonan.blade.php -->
 @extends('layouts.app')
 
 @section('title', 'Print Permohonan - HelpDesk')
+@section('page', 'Print Permohonan')
 
 @section('content')
-<div class="space-y-6">
-    <h1 class="text-2xl font-bold text-gray-900">Print Permohonan</h1>
-    
-    <div class="bg-white shadow rounded-lg">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kontak</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Keterangan</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($permohonans as $permohonan)
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <a href="{{ route('permohonan.print.single', $permohonan->id_permohonan) }}" 
-                               class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700" 
-                               target="_blank">
-                                <i class="fas fa-print mr-1"></i>Print
-                            </a>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $permohonan->tanggal->format('d/m/Y') }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $permohonan->nama_pemohon }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $permohonan->kontak_pemohon }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div>{{ $permohonan->unit->nama_unit }}</div>
-                            @if($permohonan->subUnit)
-                            <div class="text-gray-500">{{ $permohonan->subUnit->nama_sub_unit }}</div>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-900">
-                            {{ Str::limit($permohonan->keluhan, 50) }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                                {{ $permohonan->statusText }}
-                            </span>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">Tidak ada permohonan yang disahkan</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="px-6 py-4">
-            {{ $permohonans->links() }}
-        </div>
-    </div>
+<div class="grid gap-6">
+    <x-ui.page-header title="Print Permohonan" description="Permohonan yang sudah disahkan dan siap dicetak." />
+
+    <x-ui.card flush>
+        <x-ui.table>
+            <x-ui.table.header>
+                <x-ui.table.head>Tanggal</x-ui.table.head>
+                <x-ui.table.head>Pemohon</x-ui.table.head>
+                <x-ui.table.head>Unit</x-ui.table.head>
+                <x-ui.table.head class="min-w-64">Keterangan</x-ui.table.head>
+                <x-ui.table.head>Status</x-ui.table.head>
+                <x-ui.table.head class="text-right"><span class="sr-only">Cetak</span></x-ui.table.head>
+            </x-ui.table.header>
+            <x-ui.table.body>
+                @forelse ($permohonans as $permohonan)
+                    <x-ui.table.row>
+                        <x-ui.table.cell class="text-muted-foreground whitespace-nowrap tabular-nums">{{ $permohonan->tanggal->format('d/m/Y') }}</x-ui.table.cell>
+                        <x-ui.table.cell>
+                            <div class="grid">
+                                <span class="font-medium">{{ $permohonan->nama_pemohon }}</span>
+                                <span class="text-muted-foreground text-xs">{{ $permohonan->kontak_pemohon }}</span>
+                            </div>
+                        </x-ui.table.cell>
+                        <x-ui.table.cell>
+                            <div class="grid">
+                                <span>{{ $permohonan->unit->nama_unit ?? '—' }}</span>
+                                @if ($permohonan->subUnit)<span class="text-muted-foreground text-xs">{{ $permohonan->subUnit->nama_sub_unit }}</span>@endif
+                            </div>
+                        </x-ui.table.cell>
+                        <x-ui.table.cell class="text-muted-foreground">{{ Str::limit($permohonan->keluhan, 80) }}</x-ui.table.cell>
+                        <x-ui.table.cell><x-status-badge :status="$permohonan->status_permohonan" /></x-ui.table.cell>
+                        <x-ui.table.cell class="text-right">
+                            <x-ui.button :href="route('permohonan.print.single', $permohonan->id_permohonan)" target="_blank" variant="outline" size="sm" icon="printer">Print</x-ui.button>
+                        </x-ui.table.cell>
+                    </x-ui.table.row>
+                @empty
+                    <x-ui.table.empty colspan="6" title="Belum ada permohonan yang disahkan" description="Permohonan berstatus Disahkan akan muncul di sini." icon="printer" />
+                @endforelse
+            </x-ui.table.body>
+        </x-ui.table>
+        @if ($permohonans->hasPages())
+            <div class="border-t px-6 py-4">{{ $permohonans->links() }}</div>
+        @endif
+    </x-ui.card>
 </div>
 @endsection
