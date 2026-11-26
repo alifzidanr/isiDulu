@@ -147,6 +147,16 @@ class KehadiranPasskeyTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_options_only_offer_synced_passkeys(): void
+    {
+        $this->push([$this->pegawai(10, 'Ani', 'ani@al-azhar.or.id')]);
+
+        $options = $this->postJson('/passkey/options')->assertOk()->json();
+
+        $this->assertSame(self::RP_ID, $options['rpId']);
+        $this->assertSame([Base64UrlSafe::encodeUnpadded($this->credentialId)], array_column($options['allowCredentials'], 'id'));
+    }
+
     public function test_inactive_account_cannot_sign_in(): void
     {
         $this->push([$this->pegawai(10, 'Ani', 'ani@al-azhar.or.id')]);

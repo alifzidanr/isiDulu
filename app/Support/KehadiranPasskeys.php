@@ -19,6 +19,7 @@ use Webauthn\CeremonyStep\CeremonyStepManagerFactory;
 use Webauthn\CredentialRecord;
 use Webauthn\Denormalizer\WebauthnSerializerFactory;
 use Webauthn\PublicKeyCredential;
+use Webauthn\PublicKeyCredentialDescriptor;
 use Webauthn\PublicKeyCredentialRequestOptions;
 
 /**
@@ -40,10 +41,20 @@ class KehadiranPasskeys
      */
     public function options(Request $request): array
     {
+        // List the synced passkeys so the browser only offers those. Without
+        // this, password managers also offer passkeys Kehadiran never saved
+        // (e.g. from a registration that failed server-side), which can't work.
+        $allowed = KehadiranPasskey::pluck('credential_id')
+            ->map(fn (string $id) => PublicKeyCredentialDescriptor::create(
+                PublicKeyCredentialDescriptor::CREDENTIAL_TYPE_PUBLIC_KEY,
+                Base64UrlSafe::decodeNoPadding($id),
+            ))
+            ->all();
+
         $options = PublicKeyCredentialRequestOptions::create(
             challenge: random_bytes(32),
             rpId: config('kehadiran.rp_id'),
-            allowCredentials: [],
+            allowCredentials: $allowed,
             userVerification: AuthenticatorSelectionCriteria::USER_VERIFICATION_REQUIREMENT_REQUIRED,
             timeout: config('kehadiran.timeout'),
         );
