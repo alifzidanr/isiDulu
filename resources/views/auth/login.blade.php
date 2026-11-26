@@ -13,15 +13,16 @@
 
         <x-ui.card>
             <x-ui.card.content>
-                <form method="POST" action="{{ route('login') }}" class="grid gap-5" x-data="{ sending: false }" x-on:submit="sending = true">
+                <form method="POST" action="{{ route('login') }}" class="grid gap-5" x-data="recaptchaForm(@js(config('services.recaptcha.site_key')), 'login')" x-on:submit.prevent="submit($el)">
                     @csrf
+                    <input type="hidden" name="recaptcha" x-ref="recaptcha">
                     <x-ui.field label="Email" for="email" name="email">
                         <x-ui.input type="email" id="email" name="email" :value="old('email')" :invalid="$errors->has('email')" placeholder="nama@email.com" autocomplete="email" autofocus required />
                     </x-ui.field>
                     <x-ui.field label="Password" for="password" name="password">
                         <x-ui.input type="password" id="password" name="password" :invalid="$errors->has('password')" autocomplete="current-password" required />
                     </x-ui.field>
-                    @foreach (['throttle', 'failed'] as $key)
+                    @foreach (['recaptcha', 'throttle', 'failed'] as $key)
                         @error($key)
                             <x-ui.alert variant="destructive" icon="circle-x">{{ $message }}</x-ui.alert>
                         @enderror
@@ -54,6 +55,20 @@
             </x-ui.card.content>
         </x-ui.card>
 
+        @if (App\Rules\Recaptcha::enabled())
+            <p class="text-muted-foreground text-center text-[11px] leading-relaxed">
+                Situs ini dilindungi reCAPTCHA; berlaku
+                <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer" class="underline underline-offset-2">Kebijakan Privasi</a> dan
+                <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer" class="underline underline-offset-2">Persyaratan Layanan</a> Google.
+            </p>
+        @endif
+
     </div>
 </div>
 @endsection
+
+@if (App\Rules\Recaptcha::enabled())
+    @push('scripts')
+        <script src="https://www.google.com/recaptcha/api.js?render={{ urlencode(config('services.recaptcha.site_key')) }}" async defer></script>
+    @endpush
+@endif

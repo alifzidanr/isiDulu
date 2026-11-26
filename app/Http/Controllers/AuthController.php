@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Rules\Recaptcha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -18,7 +19,9 @@ class AuthController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
+            'recaptcha' => [new Recaptcha('login')],
         ]);
+        unset($credentials['recaptcha']);
 
         // Save email to cookie regardless of login result
         cookie()->queue('remember_email', $request->email, 60 * 24 * 30); // 30 days

@@ -40,5 +40,11 @@ return [
         'group_chat_id' => env('TELEGRAM_GROUP_CHAT_ID'),
     ],
 
+    // Google reCAPTCHA v3 on the login form (App\Rules\Recaptcha). Off until both keys are set.
+    'recaptcha' => [
+        'site_key' => env('RECAPTCHA_SITE_KEY'),
+        'secret_key' => env('RECAPTCHA_SECRET_KEY'),
+        'min_score' => env('RECAPTCHA_MIN_SCORE', 0.5),
+    ],
 
 ];

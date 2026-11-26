@@ -6,6 +6,7 @@ import { registerToasts } from './toast';
 import { registerCrud } from './crud';
 import { registerLivePermohonan } from './live-permohonan';
 import { registerPasskey } from './passkey';
+import { registerRecaptcha } from './recaptcha';
 
 window.Alpine = Alpine;
 window.renderIcons = renderIcons;
@@ -15,6 +16,7 @@ registerToasts(Alpine);
 registerCrud(Alpine);
 registerLivePermohonan(Alpine);
 registerPasskey(Alpine);
+registerRecaptcha(Alpine);
 
 // Alpine re-renders parts of the page (x-if, x-for, toasts), so icons are
 // re-rendered after every DOM change instead of once on load.
