@@ -6,9 +6,7 @@
 <div class="flex justify-center pt-4 sm:pt-12">
     <div class="grid w-full max-w-sm gap-6">
         <div class="grid justify-items-center gap-2 text-center">
-            <span class="bg-primary text-primary-foreground flex size-10 items-center justify-center rounded-lg">
-                <x-ui.icon name="headset" class="size-5" />
-            </span>
+            <x-app-logo compact size="size-16" />
             <h1 class="text-xl font-semibold tracking-tight">Masuk ke HelpDesk</h1>
             <p class="text-muted-foreground text-sm">Gunakan akun petugas untuk mengelola permohonan.</p>
         </div>
