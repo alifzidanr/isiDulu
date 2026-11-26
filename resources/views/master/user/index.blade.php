@@ -8,6 +8,7 @@
     $unitOptions = $units->pluck('nama_unit', 'id_unit');
     $statusOptions = ['active' => 'Active', 'inactive' => 'Inactive'];
     $levelOptions = [0 => 'Superadmin', 1 => 'Admin', 2 => 'User'];
+    $pegawaiOptions = $pegawaiKehadiran->mapWithKeys(fn ($p) => [$p->id_pegawai => $p->nama_lengkap . ($p->nip ? ' — ' . $p->nip : '')]);
 @endphp
 
 @section('content')
@@ -40,6 +41,9 @@
                                     <span class="truncate font-medium">{{ $user->nama_lengkap }}</span>
                                     <span class="text-muted-foreground truncate text-xs">{{ $user->email }}</span>
                                 </div>
+                                @if ($user->id_pegawai_kehadiran)
+                                    <x-ui.badge variant="outline" title="Terhubung dengan Kehadiran: bisa masuk dengan fingerprint/Face ID"><x-ui.icon name="fingerprint" class="size-3" /> Kehadiran</x-ui.badge>
+                                @endif
                             </div>
                         </x-ui.table.cell>
                         <x-ui.table.cell class="font-mono text-xs">{{ $user->telegram_id ?: '—' }}</x-ui.table.cell>
@@ -68,6 +72,7 @@
                                     'id_kampus' => $user->id_kampus,
                                     'id_unit' => $user->id_unit,
                                     'access_level' => $user->access_level,
+                                    'id_pegawai_kehadiran' => $user->id_pegawai_kehadiran,
                                 ]"
                                 :destroy="$user->id_user !== auth()->id() ? route('master.user.destroy', $user->id_user) : null"
                                 :confirm="'Hapus user “' . $user->nama_lengkap . '”?'" />
@@ -119,6 +124,10 @@
                 </x-ui.field>
                 <x-ui.field label="Unit" for="{{ $mode }}_unit" name="id_unit" :form="$mode">
                     <x-ui.select id="{{ $mode }}_unit" name="id_unit" x-model="{{ $model }}.id_unit" placeholder="Pilih unit" :options="$unitOptions" />
+                </x-ui.field>
+                <x-ui.field label="Pegawai Kehadiran" for="{{ $mode }}_pegawai" name="id_pegawai_kehadiran" :form="$mode" class="sm:col-span-2"
+                            hint="Untuk masuk dengan fingerprint/Face ID dari Kehadiran. Hanya pegawai Direktorat TI dan TD.">
+                    <x-ui.select id="{{ $mode }}_pegawai" name="id_pegawai_kehadiran" x-model="{{ $model }}.id_pegawai_kehadiran" placeholder="Tidak terhubung" :options="$pegawaiOptions" />
                 </x-ui.field>
             </form>
             <x-slot:footer>

@@ -7,6 +7,10 @@ use App\Http\Controllers\PublicController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermohonanController;
 use App\Http\Controllers\MasterDataController;
+use App\Http\Controllers\KehadiranSyncController;
+use App\Http\Controllers\PasskeyController;
+use App\Http\Controllers\ProfileController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 
 // Public routes
 Route::get('/', [PublicController::class, 'index'])->name('public.index');
@@ -19,9 +23,26 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Passkey (fingerprint / Face ID) login with credentials registered in Kehadiran
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/passkey/options', [PasskeyController::class, 'options'])->name('passkey.options');
+    Route::post('/passkey/login', [PasskeyController::class, 'login'])->middleware('guest')->name('passkey.login');
+});
+
+// Kehadiran pushes the Direktorat TI&TD roster and passkeys here (HMAC-signed, no session)
+Route::post('/kehadiran/sync', KehadiranSyncController::class)
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->middleware('throttle:30,1')
+    ->name('kehadiran.sync');
+
 // Protected routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profil', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profil/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::post('/passkey/confirm', [PasskeyController::class, 'confirm'])->middleware('throttle:10,1')->name('passkey.confirm');
     
     Route::get('/permohonan', [PermohonanController::class, 'index'])->name('permohonan.index');
     Route::post('/permohonan', [PermohonanController::class, 'store'])->name('permohonan.store');

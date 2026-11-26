@@ -79,32 +79,25 @@
                 @endforeach
             </nav>
 
-            {{-- User menu --}}
-            <div class="shrink-0 p-3">
-                <x-ui.dropdown-menu align="start" width="w-56" class="w-full">
-                    <x-slot:trigger>
-                        <button type="button" class="hover:bg-sidebar-accent focus-visible:ring-ring/50 flex w-full cursor-pointer items-center gap-3 rounded-lg p-2 text-left transition-colors outline-none focus-visible:ring-[3px]">
-                            <x-ui.avatar :name="$user->nama_lengkap" class="rounded-lg" />
-                            <span class="grid min-w-0 flex-1 leading-tight">
-                                <span class="truncate text-sm font-medium">{{ $user->nama_lengkap }}</span>
-                                <span class="text-muted-foreground truncate text-xs">{{ $roles[$user->access_level] ?? 'User' }}</span>
-                            </span>
-                            <x-ui.icon name="chevrons-up-down" class="text-muted-foreground size-4" />
-                        </button>
-                    </x-slot:trigger>
-                    <div class="flex items-center gap-2 px-2 py-1.5">
-                        <x-ui.avatar :name="$user->nama_lengkap" class="rounded-lg" />
-                        <div class="grid min-w-0 leading-tight">
-                            <span class="truncate text-sm font-medium">{{ $user->nama_lengkap }}</span>
-                            <span class="text-muted-foreground truncate text-xs">{{ $user->email }}</span>
-                        </div>
-                    </div>
-                    <x-ui.dropdown-menu.separator />
+            <div class="border-sidebar-border shrink-0 border-t px-3 py-3">
+                <div class="grid gap-1">
+                    <a href="{{ route('profile.edit') }}" @if (request()->routeIs('profile.*')) aria-current="page" @endif
+                       @class([
+                           'group flex h-9 items-center gap-3 rounded-lg px-3 text-sm transition-all',
+                           'bg-background text-foreground font-medium shadow-xs ring-1 ring-black/5' => request()->routeIs('profile.*'),
+                           'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground' => ! request()->routeIs('profile.*'),
+                       ])>
+                        <x-ui.icon name="user-cog" @class(['size-4', 'text-primary' => request()->routeIs('profile.*'), 'text-muted-foreground group-hover:text-sidebar-foreground' => ! request()->routeIs('profile.*')]) />
+                        Pengaturan Profil
+                    </a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <x-ui.dropdown-menu.item type="submit" icon="log-out">Keluar</x-ui.dropdown-menu.item>
+                        <button type="submit" class="group text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10 flex h-9 w-full cursor-pointer items-center gap-3 rounded-lg px-3 text-sm transition-all">
+                            <x-ui.icon name="log-out" class="text-muted-foreground group-hover:text-destructive size-4" />
+                            Keluar
+                        </button>
                     </form>
-                </x-ui.dropdown-menu>
+                </div>
             </div>
         </aside>
 

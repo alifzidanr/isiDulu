@@ -29,6 +29,12 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    /** The Kehadiran pegawai this account signs in as with a passkey. */
+    public function kehadiranPegawai()
+    {
+        return $this->belongsTo(KehadiranPegawai::class, 'id_pegawai_kehadiran', 'id_pegawai');
+    }
+
     public function kampus()
     {
         return $this->belongsTo(Kampus::class, 'id_kampus');

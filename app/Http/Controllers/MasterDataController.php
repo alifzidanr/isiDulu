@@ -133,7 +133,8 @@ class MasterDataController extends Controller
         $users = User::with(['kampus', 'unit'])->orderBy('nama_lengkap')->paginate(10);
         $kampuses = Kampus::all();
         $units = Unit::all();
-        return view('master.user.index', compact('users', 'kampuses', 'units'));
+        $pegawaiKehadiran = \App\Models\KehadiranPegawai::orderBy('nama_lengkap')->get();
+        return view('master.user.index', compact('users', 'kampuses', 'units', 'pegawaiKehadiran'));
     }
 
     public function userStore(Request $request)
@@ -146,13 +147,15 @@ class MasterDataController extends Controller
             'status' => 'required|in:active,inactive',
             'id_kampus' => 'nullable|exists:kampus,id_kampus',
             'id_unit' => 'nullable|exists:unit,id_unit',
-            'access_level' => 'required|integer|in:0,1,2'
+            'access_level' => 'required|integer|in:0,1,2',
+            'id_pegawai_kehadiran' => 'nullable|integer|exists:kehadiran_pegawai,id_pegawai|unique:user,id_pegawai_kehadiran',
         ]);
 
         $data = $request->all();
         $data['password'] = Hash::make($request->password);
 
-        User::create($data);
+        $user = User::create($data);
+        $user->forceFill(['id_pegawai_kehadiran' => $request->input('id_pegawai_kehadiran')])->save();
         return redirect()->route('master.user.index')->with('success', 'User berhasil ditambahkan!');
     }
 
@@ -167,10 +170,12 @@ class MasterDataController extends Controller
             'status' => 'required|in:active,inactive',
             'id_kampus' => 'nullable|exists:kampus,id_kampus',
             'id_unit' => 'nullable|exists:unit,id_unit',
-            'access_level' => 'required|integer|in:0,1,2'
+            'access_level' => 'required|integer|in:0,1,2',
+            'id_pegawai_kehadiran' => 'nullable|integer|exists:kehadiran_pegawai,id_pegawai|unique:user,id_pegawai_kehadiran,' . $id . ',id_user',
         ]);
 
         $data = $request->except('password');
+        $user->forceFill(['id_pegawai_kehadiran' => $request->input('id_pegawai_kehadiran')]);
         
         if ($request->filled('password')) {
             $request->validate(['password' => 'string|min:6']);

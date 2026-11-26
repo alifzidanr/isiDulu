@@ -32,6 +32,18 @@
                         Masuk
                     </x-ui.button>
                 </form>
+
+                <div x-data="passkey({ options: @js(route('passkey.options')), verify: @js(route('passkey.login')) })" x-show="supported" x-cloak class="mt-5 grid gap-3">
+                    <div class="text-muted-foreground flex items-center gap-3 text-xs">
+                        <span class="bg-border h-px flex-1"></span> atau <span class="bg-border h-px flex-1"></span>
+                    </div>
+                    <x-ui.button variant="outline" class="w-full" x-on:click="run()" x-bind:disabled="busy">
+                        <span x-show="!busy" class="contents"><x-ui.icon name="fingerprint" /></span>
+                        <span x-show="busy" x-cloak class="contents"><x-ui.icon name="loader-circle" class="animate-spin" /></span>
+                        Masuk dengan Fingerprint / Face ID
+                    </x-ui.button>
+                    <p class="text-muted-foreground text-center text-xs">Pakai passkey dari aplikasi Kehadiran. Khusus pegawai Direktorat TI &amp; TD.</p>
+                </div>
             </x-ui.card.content>
         </x-ui.card>
 
