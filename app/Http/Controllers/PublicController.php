@@ -15,6 +15,7 @@ class PublicController extends Controller
     {
         $permohonans = Permohonan::with(['unit'])
             ->orderBy('tanggal', 'desc')
+            ->orderBy('id_permohonan', 'desc')
             ->paginate(25);
             
         return view('public.permohonan-public', compact('permohonans'));
@@ -59,13 +60,13 @@ class PublicController extends Controller
         
         $permohonans = Permohonan::with(['unit'])
             ->where('id_permohonan', '>', $lastId)
-            ->orderBy('tanggal', 'desc')
+            ->orderBy('id_permohonan', 'desc')
             ->limit(10)
             ->get();
         
         return response()->json([
             'permohonans' => $permohonans,
-            'latest_id' => $permohonans->first()?->id_permohonan ?? $lastId,
+            'latest_id' => $permohonans->max('id_permohonan') ?? $lastId,
             'count' => $permohonans->count()
         ]);
     }

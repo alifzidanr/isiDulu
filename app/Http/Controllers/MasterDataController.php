@@ -181,6 +181,25 @@ class MasterDataController extends Controller
         return redirect()->route('master.user.index')->with('success', 'User berhasil diupdate!');
     }
 
+    public function userDestroy($id)
+    {
+        $user = User::findOrFail($id);
+
+        if ($user->id_user === auth()->id()) {
+            return redirect()->route('master.user.index')->with('error', 'Anda tidak bisa menghapus akun Anda sendiri.');
+        }
+
+        try {
+            $user->delete();
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Still referenced by permohonan or laporan rows.
+            return redirect()->route('master.user.index')
+                ->with('error', 'User tidak bisa dihapus karena masih terhubung dengan data permohonan atau laporan. Nonaktifkan saja statusnya.');
+        }
+
+        return redirect()->route('master.user.index')->with('success', 'User berhasil dihapus!');
+    }
+
     // JENIS PERANGKAT METHODS
     public function jenisPerangkatIndex()
     {
