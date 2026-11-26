@@ -8,39 +8,40 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * shadcn/ui design tokens (neutral base, blue primary).
- * Every component in resources/views/components/ui reads these through the
- * Tailwind theme below (bg-primary, text-muted-foreground, border-input, ...),
- * so the look is changed here, not in the components.
+ * shadcn/ui design tokens, using Al Azhar Career's palette (navy primary,
+ * blue-grey neutrals, brand green for success). Every component in
+ * resources/views/components/ui reads these through the Tailwind theme below
+ * (bg-primary, text-muted-foreground, border-input, ...), so the look is
+ * changed here, not in the components. Fonts stay this app's own.
  */
 :root {
     --radius: 0.625rem;
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.546 0.245 262.881);
-    --primary-foreground: oklch(0.97 0.014 254.604);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: oklch(0.985 0 0);
-    --success: oklch(0.627 0.17 149.214);
+    --background: hsl(0 0% 100%);
+    --foreground: hsl(219 44% 14%);
+    --card: hsl(0 0% 100%);
+    --card-foreground: hsl(219 44% 14%);
+    --popover: hsl(0 0% 100%);
+    --popover-foreground: hsl(219 44% 14%);
+    --primary: hsl(206 100% 29%);
+    --primary-foreground: hsl(0 0% 98%);
+    --secondary: hsl(214 40% 96%);
+    --secondary-foreground: hsl(219 44% 14%);
+    --muted: hsl(214 40% 96%);
+    --muted-foreground: hsl(213 15% 46%);
+    --accent: hsl(214 40% 96%);
+    --accent-foreground: hsl(219 44% 14%);
+    --destructive: hsl(0 84.2% 60.2%);
+    --destructive-foreground: hsl(0 0% 98%);
+    --success: #00a859;
     --warning: oklch(0.769 0.188 70.08);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.546 0.245 262.881);
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
+    --border: hsl(214 32% 91%);
+    --input: hsl(214 32% 91%);
+    --ring: hsl(206 100% 29%);
+    --sidebar: hsl(0 0% 100%);
+    --sidebar-foreground: hsl(219 44% 14%);
+    --sidebar-accent: hsl(214 40% 96%);
+    --sidebar-accent-foreground: hsl(219 44% 14%);
+    --sidebar-border: hsl(214 32% 91%);
 }
 
 @theme inline {

@@ -54,7 +54,6 @@
             </x-ui.card.content>
         </x-ui.card>
 
-        <p class="text-muted-foreground text-center text-xs">© {{ date('Y') }} HelpDesk</p>
     </div>
 </div>
 @endsection

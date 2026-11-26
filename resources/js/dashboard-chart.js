@@ -8,7 +8,7 @@ const canvas = document.getElementById('statusChart');
 if (canvas) {
     const labels = { 0: 'Permohonan', 1: 'Dikerjakan', 2: 'Selesai', 3: 'Diarsipkan', 4: 'Disahkan', 5: 'Dibatalkan' };
     // Same hues as the status badges (amber, blue, emerald, neutral, violet, red).
-    const colors = { 0: '#f59e0b', 1: '#2563eb', 2: '#10b981', 3: '#a3a3a3', 4: '#8b5cf6', 5: '#ef4444' };
+    const colors = { 0: '#f59e0b', 1: '#005596', 2: '#00a859', 3: '#a3a3a3', 4: '#8b5cf6', 5: '#ef4444' };
     const data = JSON.parse(canvas.dataset.status || '[]');
 
     new Chart(canvas, {

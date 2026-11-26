@@ -33,49 +33,42 @@
     <title>@yield('title', 'HelpDesk')</title>
     @stack('styles')
 </head>
-<body class="min-h-screen">
+<body class="bg-muted/40 min-h-screen">
 @auth
     <div x-data="{ sidebarOpen: false }"
          x-effect="document.documentElement.classList.toggle('overflow-hidden', sidebarOpen)"
          x-on:keydown.escape.window="sidebarOpen = false"
          x-on:resize.window="if (window.innerWidth >= 1024) sidebarOpen = false"
-         class="bg-sidebar flex min-h-dvh">
+         class="bg-muted/40 flex min-h-dvh">
         {{-- Mobile overlay --}}
         <div x-show="sidebarOpen" x-cloak x-transition.opacity x-on:click="sidebarOpen = false"
-             class="fixed inset-0 z-40 bg-black/50 lg:hidden"></div>
+             class="fixed inset-0 z-40 bg-black/30 lg:hidden"></div>
 
         {{-- Sidebar --}}
         <aside x-bind:class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-               class="no-print bg-sidebar text-sidebar-foreground fixed top-0 left-0 z-50 flex h-dvh w-72 max-w-[85vw] flex-col border-r shadow-xl transition-transform duration-200 lg:sticky lg:w-64 lg:translate-x-0 lg:border-r-0 lg:shadow-none">
-            <div class="flex h-16 shrink-0 items-center gap-2 px-3">
-                <a href="{{ route('dashboard') }}" class="hover:bg-sidebar-accent flex flex-1 items-center rounded-lg px-2 py-1.5 transition-colors">
-                    <x-app-logo />
+               class="no-print bg-background text-foreground fixed top-0 left-0 z-50 flex h-dvh w-72 max-w-[85vw] shrink-0 flex-col border-r shadow-lg transition-transform duration-200 ease-in-out lg:sticky lg:w-64 lg:translate-x-0 lg:shadow-none">
+            <div class="flex h-16 shrink-0 items-center gap-2 border-b px-5">
+                <a href="{{ route('dashboard') }}" class="flex flex-1 items-center">
+                    <x-app-logo size="size-8" />
                 </a>
                 <x-ui.button variant="ghost" size="icon-sm" icon="x" class="lg:hidden" x-on:click="sidebarOpen = false">
                     <span class="sr-only">Tutup menu</span>
                 </x-ui.button>
             </div>
 
-            <nav class="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-3 pt-2 pb-6">
+            <nav class="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-3 py-4">
                 @foreach ($nav as $group)
                     <div class="grid gap-1">
-                        <p class="text-muted-foreground/80 px-3 pb-1 text-[11px] font-semibold tracking-wider uppercase">{{ $group['label'] }}</p>
+                        <p class="text-muted-foreground px-3 pb-1 text-[11px] font-semibold tracking-wider uppercase">{{ $group['label'] }}</p>
                         @foreach ($group['items'] as [$label, $route, $pattern, $icon])
                             @php $active = request()->routeIs($pattern); @endphp
                             <a href="{{ route($route) }}" @if ($active) aria-current="page" @endif
                                @class([
-                                   'group relative flex h-9 items-center gap-3 rounded-lg px-3 text-sm transition-all',
-                                   'bg-background text-foreground font-medium shadow-xs ring-1 ring-black/5' => $active,
-                                   'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground' => ! $active,
+                                   'group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                                   'bg-accent text-accent-foreground' => $active,
+                                   'text-muted-foreground hover:bg-accent/50 hover:text-foreground' => ! $active,
                                ])>
-                                @if ($active)
-                                    <span class="bg-primary absolute top-1/2 -left-3 hidden h-5 w-1 -translate-y-1/2 rounded-r-full lg:block"></span>
-                                @endif
-                                <x-ui.icon :name="$icon" @class([
-                                    'size-4 transition-colors',
-                                    'text-primary' => $active,
-                                    'text-muted-foreground group-hover:text-sidebar-foreground' => ! $active,
-                                ]) />
+                                <x-ui.icon :name="$icon" class="size-4" />
                                 <span class="truncate">{{ $label }}</span>
                             </a>
                         @endforeach
@@ -85,9 +78,9 @@
 
         </aside>
 
-        {{-- Main: an inset panel on desktop, full width on mobile --}}
-        <div class="bg-background flex min-w-0 flex-1 flex-col lg:my-2 lg:mr-2 lg:rounded-xl lg:border lg:shadow-sm print:m-0 print:border-0 print:shadow-none">
-            <header class="no-print bg-background/90 sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b px-4 backdrop-blur lg:rounded-t-xl lg:px-6">
+        {{-- Main column --}}
+        <div class="flex min-w-0 flex-1 flex-col">
+            <header class="no-print bg-background/95 supports-[backdrop-filter]:bg-background/80 sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b px-4 backdrop-blur sm:px-6">
                 <x-ui.button variant="ghost" size="icon-sm" icon="panel-left" class="-ml-1 lg:hidden" x-on:click="sidebarOpen = true">
                     <span class="sr-only">Buka menu</span>
                 </x-ui.button>
@@ -128,6 +121,8 @@
                     @yield('content')
                 </div>
             </main>
+
+            @include('partials.footer')
         </div>
     </div>
 @else
@@ -139,11 +134,15 @@
             @endunless
         </div>
     </header>
-    <main class="px-4 py-6 sm:px-6 sm:py-10">
-        <div class="mx-auto w-full max-w-7xl">
-            @yield('content')
-        </div>
-    </main>
+    <div class="flex min-h-[calc(100dvh-4rem)] flex-col">
+        <main class="flex-1 px-4 py-6 sm:px-6 sm:py-10">
+            <div class="mx-auto w-full max-w-7xl">
+                @yield('content')
+            </div>
+        </main>
+
+        @include('partials.footer')
+    </div>
 @endauth
 
     <x-ui.toaster />
