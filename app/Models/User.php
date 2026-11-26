@@ -35,6 +35,19 @@ class User extends Authenticatable
         return $this->belongsTo(KehadiranPegawai::class, 'id_pegawai_kehadiran', 'id_pegawai');
     }
 
+    /** Passkeys registered on isiDulu itself (see App\Support\Passkeys). */
+    public function passkeys()
+    {
+        return $this->hasMany(UserPasskey::class, 'id_user', 'id_user')->latest();
+    }
+
+    /** Passkey login is only for current Direktorat TI&TD members (synced from Kehadiran). */
+    public function canUsePasskeys(): bool
+    {
+        return $this->id_pegawai_kehadiran !== null
+            && KehadiranPegawai::whereKey($this->id_pegawai_kehadiran)->exists();
+    }
+
     public function kampus()
     {
         return $this->belongsTo(Kampus::class, 'id_kampus');

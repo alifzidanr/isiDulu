@@ -3,21 +3,17 @@
 namespace App\Support;
 
 use App\Models\KehadiranPasskey;
+use App\Support\Concerns\UsesWebauthn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use RuntimeException;
 use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
-use Symfony\Component\Serializer\SerializerInterface;
 use Throwable;
-use Webauthn\AttestationStatement\AttestationStatementSupportManager;
-use Webauthn\AttestationStatement\NoneAttestationStatementSupport;
 use Webauthn\AuthenticatorAssertionResponse;
 use Webauthn\AuthenticatorAssertionResponseValidator;
 use Webauthn\AuthenticatorSelectionCriteria;
-use Webauthn\CeremonyStep\CeremonyStepManagerFactory;
 use Webauthn\CredentialRecord;
-use Webauthn\Denormalizer\WebauthnSerializerFactory;
 use Webauthn\PublicKeyCredential;
 use Webauthn\PublicKeyCredentialDescriptor;
 use Webauthn\PublicKeyCredentialRequestOptions;
@@ -29,9 +25,9 @@ use Webauthn\PublicKeyCredentialRequestOptions;
  */
 class KehadiranPasskeys
 {
-    private const SESSION_KEY = 'kehadiran_passkey_options';
+    use UsesWebauthn;
 
-    private ?SerializerInterface $serializer = null;
+    private const SESSION_KEY = 'kehadiran_passkey_options';
 
     /**
      * Start a ceremony: returns options for navigator.credentials.get() and
@@ -133,23 +129,6 @@ class KehadiranPasskeys
 
     private function validator(): AuthenticatorAssertionResponseValidator
     {
-        $factory = new CeremonyStepManagerFactory;
-        $factory->setAllowedOrigins(config('kehadiran.allowed_origins'));
-        $factory->setAttestationStatementSupportManager($this->attestationSupport());
-
-        return AuthenticatorAssertionResponseValidator::create(ceremonyStepManager: $factory->requestCeremony());
-    }
-
-    private function serializer(): SerializerInterface
-    {
-        return $this->serializer ??= (new WebauthnSerializerFactory($this->attestationSupport()))->create();
-    }
-
-    private function attestationSupport(): AttestationStatementSupportManager
-    {
-        $manager = AttestationStatementSupportManager::create();
-        $manager->add(NoneAttestationStatementSupport::create());
-
-        return $manager;
+        return AuthenticatorAssertionResponseValidator::create(ceremonyStepManager: $this->ceremonies()->requestCeremony());
     }
 }

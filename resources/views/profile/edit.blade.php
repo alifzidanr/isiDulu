@@ -6,7 +6,7 @@
 @php
     $roles = [0 => 'Superadmin', 1 => 'Admin', 2 => 'User'];
     $pegawai = $user->kehadiranPegawai;
-    $passkeyCount = $pegawai?->passkeys->count() ?? 0;
+    $passkeyCount = $user->passkeys->count();
 @endphp
 
 @section('content')
@@ -120,33 +120,64 @@
     </x-ui.card>
 
     {{-- Passkeys --}}
-    <x-ui.card>
+    <x-ui.card id="passkey">
         <x-ui.card.header>
             <x-ui.card.title>Fingerprint / Face ID</x-ui.card.title>
-            <x-ui.card.description>Passkey dari aplikasi Kehadiran, khusus pegawai Direktorat TI &amp; TD.</x-ui.card.description>
+            <x-ui.card.description>Masuk tanpa kata sandi dengan passkey. Khusus pegawai Direktorat TI &amp; TD.</x-ui.card.description>
         </x-ui.card.header>
         <x-ui.card.content class="grid gap-3">
             @if ($pegawai)
                 <p class="text-sm">
                     Akun ini terhubung dengan <span class="font-medium">{{ $pegawai->nama_lengkap }}</span>@if ($pegawai->nip) (NIP {{ $pegawai->nip }})@endif di Kehadiran.
                 </p>
-                @forelse ($pegawai->passkeys as $pk)
-                    <div class="flex items-center gap-3 rounded-lg border p-3">
+
+                @forelse ($user->passkeys as $pk)
+                    <div class="flex items-center gap-3 rounded-lg border p-3" x-data>
                         <span class="bg-muted flex size-9 items-center justify-center rounded-md"><x-ui.icon name="fingerprint" class="text-muted-foreground" /></span>
                         <div class="grid min-w-0 flex-1">
                             <span class="truncate text-sm font-medium">{{ $pk->name }}</span>
                             <span class="text-muted-foreground text-xs">
-                                {{ $pk->last_used_at ? 'Terakhir dipakai di HelpDesk ' . $pk->last_used_at->diffForHumans() : 'Belum pernah dipakai di HelpDesk' }}
+                                Didaftarkan {{ $pk->created_at->diffForHumans() }} ·
+                                {{ $pk->last_used_at ? 'terakhir dipakai ' . $pk->last_used_at->diffForHumans() : 'belum pernah dipakai' }}
                             </span>
                         </div>
+                        <form method="POST" action="{{ route('passkeys.destroy', $pk) }}" x-ref="form">
+                            @csrf
+                            @method('DELETE')
+                            <x-ui.button type="button" variant="ghost" size="icon" aria-label="Hapus passkey" data-title="Hapus passkey {{ $pk->name }}?"
+                                x-on:click="toast.confirm({ title: $el.dataset.title, description: 'Perangkat ini tidak bisa lagi dipakai untuk masuk.', confirmLabel: 'Hapus', destructive: true, onConfirm: () => $refs.form.submit() })">
+                                <x-ui.icon name="trash-2" class="text-destructive" />
+                            </x-ui.button>
+                        </form>
                     </div>
                 @empty
-                    <p class="text-muted-foreground text-sm">Belum ada passkey. Daftarkan di menu Pengaturan Profil aplikasi Kehadiran.</p>
+                    <p class="text-muted-foreground text-sm">Belum ada passkey. Daftarkan di perangkat ini supaya bisa masuk dengan fingerprint/Face ID.</p>
                 @endforelse
-                <p class="text-muted-foreground text-xs">Passkey ditambah atau dihapus lewat aplikasi Kehadiran; perubahan masuk ke HelpDesk dalam 5 menit.</p>
+
+                <div x-data="passkeyRegister({ options: @js(route('passkeys.options')), store: @js(route('passkeys.store')) })" class="grid gap-2 rounded-lg border border-dashed p-3">
+                    <template x-if="supported">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
+                            <x-ui.field label="Nama perangkat" for="passkey_name" class="flex-1">
+                                <x-ui.input id="passkey_name" x-model="name" maxlength="100" />
+                            </x-ui.field>
+                            <x-ui.button type="button" x-on:click="run()" x-bind:disabled="busy">
+                                <span x-show="!busy" class="contents"><x-ui.icon name="plus" /></span>
+                                <span x-show="busy" x-cloak class="contents"><x-ui.icon name="loader-circle" class="animate-spin" /></span>
+                                Daftarkan Passkey
+                            </x-ui.button>
+                        </div>
+                    </template>
+                    <p x-show="!supported" class="text-muted-foreground text-sm">Browser ini tidak mendukung passkey.</p>
+                </div>
+
+                @if ($pegawai->passkeys->isNotEmpty())
+                    <p class="text-muted-foreground text-xs">
+                        Passkey Kehadiran Anda ({{ $pegawai->passkeys->pluck('name')->join(', ') }}) juga bisa dipakai lewat tautan "pakai passkey Kehadiran" di halaman login, tapi hanya di perangkat tempat passkey itu dibuat.
+                    </p>
+                @endif
             @else
                 <x-ui.alert icon="info">
-                    Akun ini belum terhubung dengan Kehadiran. Pegawai Direktorat TI &amp; TD bisa masuk dengan fingerprint/Face ID dari halaman login; superadmin juga bisa menghubungkannya di Master User.
+                    Fingerprint/Face ID khusus pegawai Direktorat TI &amp; TD. Akun ini belum terhubung dengan data Kehadiran; superadmin bisa menghubungkannya di Master User.
                 </x-ui.alert>
             @endif
         </x-ui.card.content>

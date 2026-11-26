@@ -2,30 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Kampus;
-use App\Models\KehadiranPegawai;
-use App\Models\Unit;
 use App\Models\User;
+use App\Models\UserPasskey;
+use App\Support\KehadiranAccounts;
 use App\Support\KehadiranPasskeys;
+use App\Support\Passkeys;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
- * Fingerprint / Face ID login with passkeys registered in Kehadiran. Only
- * Direktorat TI&TD Menu TU members (synced from Kehadiran) can use it; the
- * first login creates their isiDulu account with access level User.
+ * Fingerprint / Face ID login, only for Direktorat TI&TD Menu TU members
+ * (synced from Kehadiran, each with an isiDulu account):
+ *  - passkeys registered here, in Pengaturan Profil (any device), and
+ *  - passkeys registered in Kehadiran (only on the device that made them).
  */
 class PasskeyController extends Controller
 {
-    public function __construct(private KehadiranPasskeys $passkeys) {}
+    public function __construct(private Passkeys $passkeys, private KehadiranPasskeys $kehadiran) {}
 
     public function options(Request $request): JsonResponse
     {
-        return response()->json($this->passkeys->options($request));
+        return response()->json($this->passkeys->loginOptions($request));
     }
 
     public function login(Request $request): JsonResponse
@@ -33,21 +33,34 @@ class PasskeyController extends Controller
         $request->validate(['credential' => ['required', 'string']]);
 
         try {
-            $passkey = $this->passkeys->verify($request, $request->input('credential'));
+            $user = $this->passkeys->verify($request, $request->input('credential'))->user;
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
-        $user = $this->userFor($passkey->pegawai);
-
-        if ($user->status !== 'active') {
-            return response()->json(['message' => 'Akun HelpDesk Anda tidak aktif. Hubungi admin.'], 403);
+        if (! $user->canUsePasskeys()) {
+            return response()->json(['message' => 'Login fingerprint/Face ID khusus pegawai Direktorat TI & TD.'], 403);
         }
 
-        Auth::login($user);
-        $request->session()->regenerate();
+        return $this->signIn($request, $user);
+    }
 
-        return response()->json(['redirect' => redirect()->intended(route('dashboard'))->getTargetUrl()]);
+    public function kehadiranOptions(Request $request): JsonResponse
+    {
+        return response()->json($this->kehadiran->options($request));
+    }
+
+    public function kehadiranLogin(Request $request): JsonResponse
+    {
+        $request->validate(['credential' => ['required', 'string']]);
+
+        try {
+            $passkey = $this->kehadiran->verify($request, $request->input('credential'));
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return $this->signIn($request, KehadiranAccounts::userFor($passkey->pegawai));
     }
 
     /**
@@ -64,7 +77,7 @@ class PasskeyController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
-        if ((int) $passkey->id_pegawai !== (int) $request->user()->id_pegawai_kehadiran) {
+        if ((int) $passkey->id_user !== (int) $request->user()->id_user) {
             return response()->json(['message' => 'Passkey ini milik akun lain.'], 422);
         }
 
@@ -73,45 +86,51 @@ class PasskeyController extends Controller
         return response()->json(['confirmed' => true]);
     }
 
-    /**
-     * The isiDulu account linked to this pegawai: an existing link, else an
-     * account with the same email, else a new one with access level User.
-     */
-    private function userFor(KehadiranPegawai $pegawai): User
+    public function registerOptions(Request $request): JsonResponse
     {
-        $user = User::where('id_pegawai_kehadiran', $pegawai->id_pegawai)->first();
+        abort_unless($request->user()->canUsePasskeys(), 403, 'Passkey khusus pegawai Direktorat TI & TD.');
 
-        if (! $user && $pegawai->email) {
-            $user = User::whereRaw('lower(email) = ?', [Str::lower($pegawai->email)])
-                ->whereNull('id_pegawai_kehadiran')
-                ->first();
-        }
+        return response()->json($this->passkeys->registerOptions($request, $request->user()));
+    }
 
-        if ($user) {
-            if ($user->id_pegawai_kehadiran === null) {
-                $user->forceFill(['id_pegawai_kehadiran' => $pegawai->id_pegawai])->save();
-            }
+    public function store(Request $request): JsonResponse
+    {
+        abort_unless($request->user()->canUsePasskeys(), 403, 'Passkey khusus pegawai Direktorat TI & TD.');
 
-            return $user;
-        }
-
-        $email = $pegawai->email && ! User::where('email', $pegawai->email)->exists()
-            ? $pegawai->email
-            : 'pegawai-'.$pegawai->id_pegawai.'@kehadiran.local';
-
-        $unit = Unit::find(config('kehadiran.default_unit_id'));
-
-        $user = new User([
-            'nama_lengkap' => $pegawai->nama_lengkap,
-            'email' => $email,
-            'password' => Hash::make(Str::random(40)),
-            'status' => 'active',
-            'access_level' => 2,
-            'id_unit' => $unit?->id_unit,
-            'id_kampus' => $unit?->id_kampus ?? Kampus::orderBy('id_kampus')->value('id_kampus'),
+        $data = $request->validate([
+            'credential' => ['required', 'string'],
+            'name' => ['required', 'string', 'max:100'],
         ]);
-        $user->forceFill(['id_pegawai_kehadiran' => $pegawai->id_pegawai])->save();
 
-        return $user;
+        try {
+            $this->passkeys->register($request, $request->user(), $data['credential'], $data['name']);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        session()->flash('success', 'Passkey berhasil didaftarkan.');
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function destroy(Request $request, UserPasskey $passkey): RedirectResponse
+    {
+        abort_unless((int) $passkey->id_user === (int) $request->user()->id_user, 404);
+
+        $passkey->delete();
+
+        return back()->with('success', 'Passkey dihapus.');
+    }
+
+    private function signIn(Request $request, User $user): JsonResponse
+    {
+        if ($user->status !== 'active') {
+            return response()->json(['message' => 'Akun HelpDesk Anda tidak aktif. Hubungi admin.'], 403);
+        }
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return response()->json(['redirect' => redirect()->intended(route('dashboard'))->getTargetUrl()]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\KehadiranPasskey;
 use App\Models\KehadiranPegawai;
+use App\Support\KehadiranAccounts;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,8 +15,9 @@ use Illuminate\Support\Facades\Validator;
  * passkeys (Kehadiran: `php artisan isidulu:sync-passkeys`). The request is
  * signed: X-Signature = HMAC-SHA256("<X-Timestamp>.<body>", KEHADIRAN_SYNC_SECRET).
  *
- * Each push replaces the roster, so anyone missing from it loses passkey
- * login. Passkeys already known keep their local credential (and with it the
+ * Every member gets an isiDulu account (KehadiranAccounts). Each push
+ * replaces the roster, so anyone missing from it loses passkey login.
+ * Passkeys already known keep their local credential (and with it the
  * signature counter updated by logins here).
  */
 class KehadiranSyncController extends Controller
@@ -53,12 +55,15 @@ class KehadiranSyncController extends Controller
             $known = KehadiranPasskey::pluck('credential', 'credential_id');
 
             foreach ($data['pegawai'] as $p) {
-                KehadiranPegawai::updateOrCreate(['id_pegawai' => $p['id_pegawai']], [
+                $pegawai = KehadiranPegawai::updateOrCreate(['id_pegawai' => $p['id_pegawai']], [
                     'nip' => $p['nip'] ?? null,
                     'nama_lengkap' => $p['nama_lengkap'],
                     'email' => $p['email'] ?? null,
                     'synced_at' => $now,
                 ]);
+
+                // Copy the member into isiDulu so they can sign in and add a passkey here.
+                KehadiranAccounts::userFor($pegawai);
 
                 foreach ($p['passkeys'] as $pk) {
                     KehadiranPasskey::updateOrCreate(['credential_id' => $pk['credential_id']], [

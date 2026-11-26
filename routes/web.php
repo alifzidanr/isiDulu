@@ -23,10 +23,12 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Passkey (fingerprint / Face ID) login with credentials registered in Kehadiran
+// Passkey (fingerprint / Face ID) login: passkeys registered here, or in Kehadiran
 Route::middleware('throttle:10,1')->group(function () {
     Route::post('/passkey/options', [PasskeyController::class, 'options'])->name('passkey.options');
     Route::post('/passkey/login', [PasskeyController::class, 'login'])->middleware('guest')->name('passkey.login');
+    Route::post('/passkey/kehadiran/options', [PasskeyController::class, 'kehadiranOptions'])->name('passkey.kehadiran.options');
+    Route::post('/passkey/kehadiran/login', [PasskeyController::class, 'kehadiranLogin'])->middleware('guest')->name('passkey.kehadiran.login');
 });
 
 // Kehadiran pushes the Direktorat TI&TD roster and passkeys here (HMAC-signed, no session)
@@ -43,6 +45,9 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profil/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::post('/passkey/confirm', [PasskeyController::class, 'confirm'])->middleware('throttle:10,1')->name('passkey.confirm');
+    Route::post('/profil/passkeys/options', [PasskeyController::class, 'registerOptions'])->middleware('throttle:10,1')->name('passkeys.options');
+    Route::post('/profil/passkeys', [PasskeyController::class, 'store'])->middleware('throttle:10,1')->name('passkeys.store');
+    Route::delete('/profil/passkeys/{passkey}', [PasskeyController::class, 'destroy'])->name('passkeys.destroy');
     
     Route::get('/permohonan', [PermohonanController::class, 'index'])->name('permohonan.index');
     Route::post('/permohonan', [PermohonanController::class, 'store'])->name('permohonan.store');
