@@ -85,7 +85,14 @@ class KehadiranPasskeys
                 ->first();
 
             if (! $passkey) {
-                throw new RuntimeException('Passkey ini tidak terdaftar untuk HelpDesk. Hanya pegawai Direktorat TI & TD di Kehadiran yang bisa memakainya.');
+                // Usually an old passkey still saved in the phone/password manager
+                // after it was removed from Kehadiran, or someone outside TI&TD.
+                logger()->warning('Unknown Kehadiran passkey used on login', [
+                    'credential_id' => Base64UrlSafe::encodeUnpadded($credential->rawId),
+                    'user_handle' => $credential->response->userHandle !== null ? bin2hex($credential->response->userHandle) : null,
+                ]);
+
+                throw new RuntimeException('Passkey yang dipilih tidak terdaftar di Kehadiran untuk pegawai Direktorat TI & TD. Jika muncul beberapa passkey, pilih yang terbaru, atau daftarkan ulang di Pengaturan Profil Kehadiran.');
             }
 
             $record = $this->serializer()->deserialize(json_encode($passkey->credential, JSON_THROW_ON_ERROR), CredentialRecord::class, 'json');
