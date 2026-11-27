@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use Symfony\Component\Uid\Uuid;
+use App\Support\Penandatangan;
+use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\PasskeyFixtures;
 use Tests\TestCase;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
@@ -144,6 +146,28 @@ class KehadiranPasskeyTest extends TestCase
 
         $this->assertAuthenticated();
         $this->get('/profil')->assertOk()->assertDontSee('belum punya kata sandi sendiri');
+    }
+
+    public function test_push_brings_the_print_signer_and_signature(): void
+    {
+        Storage::fake('local');
+        $png = "\x89PNG\r\n\x1a\n".str_repeat("\0", 16);
+
+        $this->push([], ['penandatangan' => ['nama_lengkap' => 'Doni Sutrisno', 'tanda_tangan' => base64_encode($png)]])->assertOk();
+        $ttd = Penandatangan::current();
+        $this->assertSame('Doni Sutrisno', $ttd['nama']);
+        $this->assertSame('data:image/png;base64,'.base64_encode($png), $ttd['gambar']);
+
+        // Not a PNG: name kept, image dropped.
+        $this->push([], ['penandatangan' => ['nama_lengkap' => 'Doni Sutrisno', 'tanda_tangan' => base64_encode('<svg onload=alert(1)>')]])->assertOk();
+        $this->assertNull(Penandatangan::current()['gambar']);
+
+        // Older pushes without the key leave it alone; null clears it.
+        $this->push([], ['penandatangan' => ['nama_lengkap' => 'Doni Sutrisno', 'tanda_tangan' => base64_encode($png)]]);
+        $this->push([])->assertOk();
+        $this->assertNotNull(Penandatangan::current()['gambar']);
+        $this->push([], ['penandatangan' => null])->assertOk();
+        $this->assertNull(Penandatangan::current()['gambar']);
     }
 
     private function pegawai(int $id, string $nama, ?string $email, ?array $passkeys = null): array

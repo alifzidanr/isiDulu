@@ -66,8 +66,23 @@
                     <p class="bg-muted/50 rounded-lg border p-4 text-sm whitespace-pre-wrap">{{ $permohonan->keluhan }}</p>
                 </div>
 
+                {{-- Signed by the person in charge of isiDulu (from Kehadiran). --}}
+                @php($ttd = \App\Support\Penandatangan::current())
+                <div class="flex justify-end break-inside-avoid">
+                    <div class="grid w-56 justify-items-center gap-1 text-center text-sm">
+                        <p>Jakarta, {{ now()->translatedFormat('d F Y') }}</p>
+                        <p>{{ $ttd['jabatan'] }}</p>
+                        <div class="flex h-20 w-full items-center justify-center">
+                            @if ($ttd['gambar'])
+                                <img src="{{ $ttd['gambar'] }}" alt="Tanda tangan {{ $ttd['nama'] }}" class="max-h-20 max-w-full object-contain">
+                            @endif
+                        </div>
+                        <p class="w-full border-t pt-1 font-semibold">{{ $ttd['nama'] }}</p>
+                    </div>
+                </div>
+
                 <p class="text-muted-foreground border-t pt-4 text-center text-xs">
-                    Dicetak pada {{ now()->translatedFormat('d F Y H:i') }} · © {{ date('Y') }} HelpDesk
+                    Dicetak pada {{ now()->translatedFormat('d F Y H:i') }} · &copy;{{ date('Y') }} Direktorat IT dan Transformasi Digital YPIA.
                 </p>
             </x-ui.card.content>
         </x-ui.card>

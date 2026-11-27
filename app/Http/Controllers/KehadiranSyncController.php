@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\KehadiranPasskey;
 use App\Models\KehadiranPegawai;
 use App\Support\KehadiranAccounts;
+use App\Support\Penandatangan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -47,7 +48,15 @@ class KehadiranSyncController extends Controller
             'pegawai.*.passkeys.*.name' => ['required', 'string'],
             'pegawai.*.passkeys.*.credential_id' => ['required', 'string'],
             'pegawai.*.passkeys.*.credential' => ['required', 'json'],
+            // Signer of printed permohonan (optional; older pushes omit it).
+            'penandatangan' => ['sometimes', 'nullable', 'array'],
+            'penandatangan.nama_lengkap' => ['required_with:penandatangan', 'string', 'max:150'],
+            'penandatangan.tanda_tangan' => ['nullable', 'string', 'max:'.(int) ceil(Penandatangan::MAX_BYTES * 4 / 3) + 4],
         ])->validate();
+
+        if (array_key_exists('penandatangan', $data)) {
+            Penandatangan::store($data['penandatangan']);
+        }
 
         $now = now();
 

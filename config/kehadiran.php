@@ -25,6 +25,13 @@ return [
     // Shared with Kehadiran's ISIDULU_SYNC_SECRET; signs roster pushes and SSO tokens.
     'sync_secret' => env('KEHADIRAN_SYNC_SECRET'),
 
+    // Signer printed bottom right on a permohonan. Kehadiran's push supplies
+    // the name and signature (Penandatangan); these are the fallbacks.
+    'penandatangan' => [
+        'nama' => env('PENANDATANGAN_NAMA', 'Doni Sutrisno'),
+        'jabatan' => env('PENANDATANGAN_JABATAN', 'Penanggung Jawab HelpDesk'),
+    ],
+
     // Unit (and its kampus) given to accounts created for roster members.
     'default_unit_id' => env('KEHADIRAN_DEFAULT_UNIT_ID'),
 

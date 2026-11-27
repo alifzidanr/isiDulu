@@ -72,9 +72,9 @@ trait PasskeyFixtures
     }
 
     /** Signed push, as Kehadiran's isidulu:sync-passkeys sends it. */
-    private function push(array $pegawai)
+    private function push(array $pegawai, array $extra = [])
     {
-        $body = json_encode(['pegawai' => $pegawai]);
+        $body = json_encode(['pegawai' => $pegawai] + $extra);
         $ts = (string) time();
 
         return $this->call('POST', '/kehadiran/sync', [], [], [], [
