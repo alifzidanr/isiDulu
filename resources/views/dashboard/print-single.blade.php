@@ -13,9 +13,9 @@
             'Unit' => $permohonan->unit->nama_unit ?? '-',
             'Sub Unit' => $permohonan->subUnit->nama_sub_unit ?? '-',
             'Status Inventaris' => $permohonan->inventaris === 'y' ? 'Inventaris' : 'Non-Inventaris',
+            // The petugas is whoever wrote the laporan (id_user is only a default PIC).
+            'Nama Petugas' => $permohonan->laporan?->creator?->nama_lengkap ?? '-',
         ];
-        // The petugas is whoever wrote the laporan (id_user is only a default PIC).
-        $petugas = $permohonan->laporan?->creator?->nama_lengkap;
         $ttd = \App\Support\Penandatangan::current();
     @endphp
 
@@ -55,13 +55,8 @@
                     <p class="bg-muted/50 rounded-lg border p-4 text-sm whitespace-pre-wrap">{{ $permohonan->keluhan }}</p>
                 </div>
 
-                {{-- Petugas bottom left; signed bottom right by the person in charge of isiDulu. --}}
-                <div class="flex items-end justify-between gap-8 break-inside-avoid text-sm">
-                    <div class="grid w-56 justify-items-center gap-1 text-center">
-                        <p>Petugas</p>
-                        <div class="h-20"></div>
-                        <p class="w-full border-t pt-1 font-semibold">{{ $petugas ?? '-' }}</p>
-                    </div>
+                {{-- Signed bottom right by the person in charge of isiDulu. --}}
+                <div class="flex justify-end break-inside-avoid text-sm">
                     <div class="grid w-56 justify-items-center gap-1 text-center">
                         <p>Jakarta, {{ now()->translatedFormat('d F Y') }}</p>
                         <p>{{ $ttd['jabatan'] }}</p>
