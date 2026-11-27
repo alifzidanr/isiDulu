@@ -102,4 +102,21 @@ class PermohonanAudienceTest extends TestCase
         sort($sent);
         $this->assertSame(['-100', '111', '222', '333'], $sent);
     }
+
+    public function test_kampus_users_cover_every_unit_and_sub_unit_of_their_kampus(): void
+    {
+        $kampus = $this->user('kampus@x', ['id_kampus' => 1]);
+        $unit = $this->user('unit@x', ['id_unit' => 5]);
+        $sub = $this->user('sub@x', ['id_sub_unit' => 9]);
+        $other = $this->user('sby@x', ['id_kampus' => 2]);
+
+        $ids = fn ($id) => PermohonanAudience::usersFor(Permohonan::find($id))->pluck('email')->sort()->values()->all();
+
+        // IT Support (kampus 1): the kampus user only.
+        $this->assertSame(['kampus@x'], $ids(1));
+        // Keuangan › Payroll (kampus 1): kampus, unit and sub unit users.
+        $this->assertSame(['kampus@x', 'sub@x', 'unit@x'], $ids(2));
+        // Surabaya TU (kampus 2): only that kampus.
+        $this->assertSame(['sby@x'], $ids(3));
+    }
 }
