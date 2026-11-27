@@ -7,9 +7,11 @@ use Illuminate\Notifications\Notification;
 use NotificationChannels\Telegram\TelegramMessage;
 use App\Models\Laporan;
 
+use App\Notifications\Concerns\EscapesTelegramMarkdown;
+
 class LaporanCreatedNotification extends Notification
 {
-    use Queueable;
+    use Queueable, EscapesTelegramMarkdown;
 
     protected $laporan;
 
@@ -30,12 +32,12 @@ class LaporanCreatedNotification extends Notification
         
         $message = "📄 *Laporan Dibuat*\n\n";
         $message .= "📋 ID Permohonan: #{$permohonan->id_permohonan}\n";
-        $message .= "👤 Pemohon: {$permohonan->nama_pemohon}\n";
-        $message .= "🏢 Unit: {$permohonan->unit->nama_unit}\n";
-        $message .= "📝 Keluhan: {$keluhan}\n";
-        $message .= "🔧 Perangkat: {$this->laporan->jenisPerangkat->nama_perangkat}\n";
-        $message .= "🛠 Perawatan: {$this->laporan->jenisPerawatan->nama_perawatan}\n";
-        $message .= "📌 Detail: {$this->laporan->detail_perangkat}\n";
+        $message .= "👤 Pemohon: {$this->md($permohonan->nama_pemohon)}\n";
+        $message .= "🏢 Unit: {$this->md($permohonan->unit?->nama_unit)}\n";
+        $message .= "📝 Keluhan: {$this->md($keluhan)}\n";
+        $message .= "🔧 Perangkat: {$this->md($this->laporan->jenisPerangkat?->nama_perangkat)}\n";
+        $message .= "🛠 Perawatan: {$this->md($this->laporan->jenisPerawatan?->nama_perawatan)}\n";
+        $message .= "📌 Detail: {$this->md($this->laporan->detail_perangkat)}\n";
 
         return TelegramMessage::create()
             ->content($message)

@@ -7,9 +7,11 @@ use Illuminate\Notifications\Notification;
 use NotificationChannels\Telegram\TelegramMessage;
 use App\Models\Permohonan;
 
+use App\Notifications\Concerns\EscapesTelegramMarkdown;
+
 class PermohonanStatusChangedNotification extends Notification
 {
-    use Queueable;
+    use Queueable, EscapesTelegramMarkdown;
 
     protected $permohonan;
     protected $oldStatus;
@@ -36,9 +38,9 @@ class PermohonanStatusChangedNotification extends Notification
 
         $message = "{$statusEmoji} *Status Permohonan Diperbarui*\n\n";
         $message .= "📋 ID: #{$this->permohonan->id_permohonan}\n";
-        $message .= "👤 Pemohon: {$this->permohonan->nama_pemohon}\n";
-        $message .= "🏢 Unit: {$this->permohonan->unit->nama_unit}\n";
-        $message .= "📝 Keluhan: {$keluhan}\n";
+        $message .= "👤 Pemohon: {$this->md($this->permohonan->nama_pemohon)}\n";
+        $message .= "🏢 Unit: {$this->md($this->permohonan->unit?->nama_unit)}\n";
+        $message .= "📝 Keluhan: {$this->md($keluhan)}\n";
         $message .= "📊 Status Lama: *{$oldStatusText}*\n";
         $message .= "📊 Status Baru: *{$newStatusText}*\n";
         $message .= "📅 Diperbarui: " . now()->format('d/m/Y H:i') . "\n";

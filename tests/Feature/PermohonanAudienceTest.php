@@ -35,6 +35,8 @@ class PermohonanAudienceTest extends TestCase
             $t->date('tanggal')->nullable();
             $t->string('nama_pemohon');
             $t->string('kontak_pemohon')->nullable();
+            $t->string('pimpinan_pemohon')->nullable();
+            $t->string('email_pemohon')->nullable();
             $t->integer('id_unit');
             $t->integer('id_sub_unit')->nullable();
             $t->string('inventaris')->nullable();
@@ -118,5 +120,83 @@ class PermohonanAudienceTest extends TestCase
         $this->assertSame(['kampus@x', 'sub@x', 'unit@x'], $ids(2));
         // Surabaya TU (kampus 2): only that kampus.
         $this->assertSame(['sby@x'], $ids(3));
+    }
+
+    private function publicForm(array $override = []): array
+    {
+        return array_merge([
+            'nama_pemohon' => 'Siti Aminah', 'kontak_pemohon' => '0812-3456-789', 'pimpinan_pemohon' => "D'Arcy Nur",
+            'id_unit' => 4, 'inventaris' => 'n', 'keluhan' => 'Printer di ruang guru tidak bisa mencetak.',
+        ], $override);
+    }
+
+    public function test_names_cannot_contain_digits(): void
+    {
+        Notification::fake();
+
+        $this->post(route('public.store'), $this->publicForm(['nama_pemohon' => 'Siti 123']))->assertSessionHasErrors('nama_pemohon');
+        $this->post(route('public.store'), $this->publicForm(['pimpinan_pemohon' => 'Pak 2']))->assertSessionHasErrors('pimpinan_pemohon');
+        $this->post(route('public.store'), $this->publicForm(['kontak_pemohon' => 'call me']))->assertSessionHasErrors('kontak_pemohon');
+        $this->assertSame(3, Permohonan::count());
+
+        $this->post(route('public.store'), $this->publicForm())->assertSessionHasNoErrors();
+        $this->assertSame(4, Permohonan::count());
+    }
+
+    public function test_permohonan_text_is_stored_without_html_and_control_characters(): void
+    {
+        Notification::fake();
+
+        $this->post(route('public.store'), $this->publicForm([
+            'nama_pemohon' => '<b>Siti</b>  Aminah',
+            'keluhan' => "<script>alert(1)</script>Printer rusak\x00\r\n\r\n\r\n\r\nTolong dicek <img src=x onerror=alert(2)>",
+        ]))->assertSessionHasNoErrors();
+
+        $p = Permohonan::latest('id_permohonan')->first();
+        $this->assertSame('Siti Aminah', $p->nama_pemohon);
+        $this->assertStringNotContainsString('<', $p->keluhan);
+        $this->assertStringNotContainsString("\0", $p->keluhan);
+        $this->assertStringNotContainsString("\n\n\n", $p->keluhan);
+
+        $this->post(route('public.store'), $this->publicForm(['keluhan' => str_repeat('a', 5001)]))->assertSessionHasErrors('keluhan');
+    }
+
+    public function test_public_polling_does_not_expose_contact_details(): void
+    {
+        DB::table('permohonan')->where('id_permohonan', 3)->update(['kontak_pemohon' => '0812999']);
+
+        $json = $this->getJson(route('public.latest', ['last_id' => 0]))->assertOk()->json('permohonans');
+
+        $this->assertSame(['id_permohonan', 'nama_pemohon', 'unit', 'tanggal', 'keluhan', 'status_permohonan'], array_keys($json[0]));
+        $this->assertStringNotContainsString('0812999', json_encode($json));
+    }
+
+    public function test_users_cannot_open_or_act_on_other_kampus_permohonan_by_id(): void
+    {
+        $jakarta = $this->user('jkt@x', ['id_kampus' => 1]);
+
+        $this->actingAs($jakarta)->get(route('permohonan.print.single', 3))->assertNotFound();
+        $this->actingAs($jakarta)->get(route('permohonan.laporan.show', 3))->assertNotFound();
+        $this->actingAs($jakarta)->patch(route('permohonan.status', 3), ['status' => 1])->assertNotFound();
+        $this->assertSame(0, (int) DB::table('permohonan')->where('id_permohonan', 3)->value('status_permohonan'));
+    }
+
+    public function test_telegram_messages_escape_markdown_in_user_text(): void
+    {
+        DB::table('permohonan')->where('id_permohonan', 1)->update([
+            'nama_pemohon' => 'A_B', 'tanggal' => now(), 'keluhan' => 'Klik [ini](http://evil.example) *penting*',
+        ]);
+
+        $text = (new NewPermohonanNotification(Permohonan::find(1)))->toTelegram(null)->toArray()['text'];
+
+        $this->assertStringContainsString('A\\_B', $text);
+        $this->assertStringContainsString('\\[ini](http://evil.example) \\*penting\\*', $text);
+    }
+
+    public function test_pages_send_security_headers(): void
+    {
+        $this->get(route('login'))
+            ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
     }
 }

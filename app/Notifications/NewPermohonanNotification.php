@@ -8,9 +8,11 @@ use NotificationChannels\Telegram\TelegramMessage;
 use App\Models\Permohonan;
 use Illuminate\Support\Str;
 
+use App\Notifications\Concerns\EscapesTelegramMarkdown;
+
 class NewPermohonanNotification extends Notification
 {
-    use Queueable;
+    use Queueable, EscapesTelegramMarkdown;
 
     protected $permohonan;
 
@@ -30,10 +32,10 @@ class NewPermohonanNotification extends Notification
         
         $message = "🆕 *Permohonan Baru*\n\n";
         $message .= "📋 ID: #{$this->permohonan->id_permohonan}\n";
-        $message .= "👤 Pemohon: {$this->permohonan->nama_pemohon}\n";
-        $message .= "🏢 Unit: {$this->permohonan->unit->nama_unit}\n";
-        $message .= "📞 Kontak: {$this->permohonan->kontak_pemohon}\n";
-        $message .= "📝 Keluhan: {$keluhan}\n";
+        $message .= "👤 Pemohon: {$this->md($this->permohonan->nama_pemohon)}\n";
+        $message .= "🏢 Unit: {$this->md($this->permohonan->unit?->nama_unit)}\n";
+        $message .= "📞 Kontak: {$this->md($this->permohonan->kontak_pemohon)}\n";
+        $message .= "📝 Keluhan: {$this->md($keluhan)}\n";
         $message .= "📅 Tanggal: {$this->permohonan->tanggal->format('d/m/Y H:i')}\n";
 
         return TelegramMessage::create()

@@ -142,16 +142,16 @@
             @csrf
             <input type="hidden" name="_form" value="create">
             <x-ui.field label="Nama" for="nama_pemohon" name="nama_pemohon" form="create" required>
-                <x-ui.input id="nama_pemohon" name="nama_pemohon" :value="$oldIf('create', 'nama_pemohon')" placeholder="Nama lengkap pemohon" required />
+                <x-ui.input id="nama_pemohon" name="nama_pemohon" :value="$oldIf('create', 'nama_pemohon')" placeholder="Nama lengkap pemohon" required x-on:input="$el.value = $el.value.replace(/[0-9]/g, '')" maxlength="100" title="Hanya huruf, tanpa angka" />
             </x-ui.field>
             <x-ui.field label="Email" for="email_pemohon" name="email_pemohon" form="create">
                 <x-ui.input type="email" id="email_pemohon" name="email_pemohon" :value="$oldIf('create', 'email_pemohon')" placeholder="nama@email.com" />
             </x-ui.field>
             <x-ui.field label="No. Handphone" for="kontak_pemohon" name="kontak_pemohon" form="create" required>
-                <x-ui.input id="kontak_pemohon" name="kontak_pemohon" :value="$oldIf('create', 'kontak_pemohon')" placeholder="08xxxxxxxxxx" inputmode="tel" required />
+                <x-ui.input id="kontak_pemohon" name="kontak_pemohon" :value="$oldIf('create', 'kontak_pemohon')" placeholder="08xxxxxxxxxx" inputmode="tel" required maxlength="20" x-on:input="$el.value = $el.value.replace(/[^0-9+\s-]/g, '')" />
             </x-ui.field>
             <x-ui.field label="Nama Pimpinan" for="pimpinan_pemohon" name="pimpinan_pemohon" form="create">
-                <x-ui.input id="pimpinan_pemohon" name="pimpinan_pemohon" :value="$oldIf('create', 'pimpinan_pemohon')" placeholder="Pimpinan unit (opsional)" />
+                <x-ui.input id="pimpinan_pemohon" name="pimpinan_pemohon" :value="$oldIf('create', 'pimpinan_pemohon')" placeholder="Pimpinan unit (opsional)" x-on:input="$el.value = $el.value.replace(/[0-9]/g, '')" maxlength="100" title="Hanya huruf, tanpa angka" />
             </x-ui.field>
             <x-ui.field label="Unit / Sub Unit" for="unit-picker" name="id_unit" form="create" required class="min-w-0">
                 <x-unit-picker :units="$units" :unit="$oldIf('create', 'id_unit')" :sub-unit="$oldIf('create', 'id_sub_unit')" :invalid="$errors->has('id_unit') || $errors->has('id_sub_unit')" />
@@ -160,7 +160,7 @@
                 <x-ui.select id="inventaris" name="inventaris" placeholder="Pilih status" :options="['y' => 'Inventaris', 'n' => 'Non-Inventaris']" :selected="$oldIf('create', 'inventaris')" required />
             </x-ui.field>
             <x-ui.field label="Permohonan" for="keluhan" name="keluhan" form="create" required class="sm:col-span-2">
-                <x-ui.textarea id="keluhan" name="keluhan" placeholder="Jelaskan kebutuhan atau kendala dengan detail..." required>{{ $oldIf('create', 'keluhan') }}</x-ui.textarea>
+                <x-ui.textarea id="keluhan" name="keluhan" placeholder="Jelaskan kebutuhan atau kendala dengan detail..." required maxlength="5000">{{ $oldIf('create', 'keluhan') }}</x-ui.textarea>
             </x-ui.field>
         </form>
         <x-slot:footer>

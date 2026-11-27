@@ -16,12 +16,12 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 // Public routes
 Route::get('/', [PublicController::class, 'index'])->name('public.index');
 Route::get('/form-permohonan', [PublicController::class, 'showForm'])->name('public.form');
-Route::post('/form-permohonan', [PublicController::class, 'store'])->name('public.store');
-Route::get('/permohonan/latest', [PublicController::class, 'getLatest'])->name('public.latest'); // New polling endpoint
+Route::post('/form-permohonan', [PublicController::class, 'store'])->middleware('throttle:5,1')->name('public.store');
+Route::get('/permohonan/latest', [PublicController::class, 'getLatest'])->middleware('throttle:60,1')->name('public.latest'); // New polling endpoint
 
 // Auth routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Passkey (fingerprint / Face ID) login with the YPIA-wide al-azhar.id passkeys

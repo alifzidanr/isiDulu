@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Support\PerPage;
 use App\Support\PermohonanAudience;
+use App\Support\PermohonanInput;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\Permohonan;
@@ -32,17 +33,7 @@ class PublicController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nama_pemohon' => 'required|string|max:255',
-            'email_pemohon' => 'nullable|email|max:255',
-            'kontak_pemohon' => 'required|string|max:255',
-            'pimpinan_pemohon' => 'nullable|string|max:255',
-            'id_unit' => 'required|exists:unit,id_unit',
-            // Optional, and must belong to the chosen unit.
-            'id_sub_unit' => ['nullable', 'integer', Rule::exists('sub_unit', 'id_sub_unit')->where('id_unit', $request->input('id_unit'))],
-            'inventaris' => 'required|in:y,n',
-            'keluhan' => 'required|string',
-        ]);
+        $validated = PermohonanInput::validate($request, public: true);
 
         $validated['tanggal'] = now();
         $validated['id_user'] = 1; // Default PIC
@@ -69,8 +60,17 @@ class PublicController extends Controller
             ->limit(10)
             ->get();
         
+        // Public endpoint: only what the public list shows; never contact
+        // details, email, leader's name or who handles it.
         return response()->json([
-            'permohonans' => $permohonans,
+            'permohonans' => $permohonans->map(fn (Permohonan $p) => [
+                'id_permohonan' => $p->id_permohonan,
+                'nama_pemohon' => $p->nama_pemohon,
+                'unit' => ['nama_unit' => $p->unit?->nama_unit],
+                'tanggal' => $p->tanggal,
+                'keluhan' => \Illuminate\Support\Str::limit((string) $p->keluhan, 100),
+                'status_permohonan' => $p->status_permohonan,
+            ])->values(),
             'latest_id' => $permohonans->max('id_permohonan') ?? $lastId,
             'count' => $permohonans->count()
         ]);

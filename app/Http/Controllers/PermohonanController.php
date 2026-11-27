@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Support\PerPage;
 use App\Support\PermohonanAudience;
+use App\Support\PermohonanInput;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\Permohonan;
@@ -55,17 +56,7 @@ class PermohonanController extends Controller
     {
         $this->abortIfReadOnly();
 
-        $validated = $request->validate([
-            'nama_pemohon' => 'required|string|max:255',
-            'email_pemohon' => 'nullable|email|max:255',
-            'kontak_pemohon' => 'required|string|max:255',
-            'pimpinan_pemohon' => 'nullable|string|max:255',
-            'id_unit' => 'required|exists:unit,id_unit',
-            // Optional, and must belong to the chosen unit.
-            'id_sub_unit' => ['nullable', 'integer', Rule::exists('sub_unit', 'id_sub_unit')->where('id_unit', $request->input('id_unit'))],
-            'inventaris' => 'required|in:y,n',
-            'keluhan' => 'required|string',
-        ]);
+        $validated = PermohonanInput::validate($request);
 
         $validated['tanggal'] = now();
         $validated['id_user'] = auth()->id();
@@ -87,7 +78,7 @@ class PermohonanController extends Controller
             'status' => 'required|integer|in:1,2,4,5'
         ]);
 
-        $permohonan = Permohonan::findOrFail($id);
+        $permohonan = $this->findVisible($id);
         
         // Capture old status BEFORE updating
         $oldStatus = $permohonan->status_permohonan;
@@ -107,7 +98,7 @@ class PermohonanController extends Controller
     {
         $this->abortIfReadOnly();
 
-        $permohonan = Permohonan::findOrFail($id);
+        $permohonan = $this->findVisible($id);
         
         if ($permohonan->status_permohonan != 2) {
             return back()->with('error', 'Laporan hanya bisa dibuat untuk permohonan yang sudah selesai!');
@@ -139,10 +130,8 @@ class PermohonanController extends Controller
 
     public function showLaporan($id)
     {
-        $permohonan = Permohonan::with(['laporan.jenisPerangkat', 'laporan.jenisPerawatan', 
-                                        'laporan.detailPerawatan', 'laporan.creator', 
-                                        'unit', 'subUnit'])
-                                ->findOrFail($id);
+        $permohonan = $this->findVisible($id, ['laporan.jenisPerangkat', 'laporan.jenisPerawatan',
+                                               'laporan.detailPerawatan', 'laporan.creator', 'unit', 'subUnit']);
 
         if (!$permohonan->laporan) {
             return back()->with('error', 'Laporan tidak ditemukan!');
@@ -170,8 +159,24 @@ class PermohonanController extends Controller
 
     public function printSingle($id)
     {
-        $permohonan = Permohonan::with(['unit', 'subUnit'])->findOrFail($id);
+        $permohonan = $this->findVisible($id, ['unit', 'subUnit']);
         return view('dashboard.print-single', compact('permohonan'));
+    }
+
+    /**
+     * Users may only open or act on permohonan assigned to their kampus, unit
+     * or sub unit (the same rule as the list); others get 404.
+     */
+    private function findVisible($id, array $with = []): Permohonan
+    {
+        $query = Permohonan::with($with)->whereKey($id);
+        $user = Auth::user();
+
+        if ($user?->isUser()) {
+            PermohonanAudience::visibleTo($query, $user);
+        }
+
+        return $query->firstOrFail();
     }
 
     private function abortIfReadOnly(): void
