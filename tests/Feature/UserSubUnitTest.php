@@ -119,4 +119,29 @@ class UserSubUnitTest extends TestCase
         $this->actingAs($this->admin)->get(route('master.user.index', ['q' => 'zzz']))
             ->assertSee('Tidak ada user yang cocok');
     }
+
+    public function test_deleting_needs_the_exact_name(): void
+    {
+        $this->actingAs($this->admin)->delete(route('master.sub-unit.destroy', 1))
+            ->assertSessionHas('error');
+        $this->actingAs($this->admin)->delete(route('master.sub-unit.destroy', 1), ['confirm_name' => 'helpdesk'])
+            ->assertSessionHas('error');
+        $this->assertTrue(DB::table('sub_unit')->where('id_sub_unit', 1)->exists());
+
+        $this->actingAs($this->admin)->delete(route('master.sub-unit.destroy', 1), ['confirm_name' => 'Helpdesk'])
+            ->assertSessionHas('success');
+        $this->assertFalse(DB::table('sub_unit')->where('id_sub_unit', 1)->exists());
+    }
+
+    public function test_deleting_a_user_needs_their_name(): void
+    {
+        $budi = User::forceCreate(['id_kampus' => 1, 'access_level' => 2, 'nama_lengkap' => 'Budi Santoso', 'email' => 'budi@x.id', 'password' => 'x']);
+
+        $this->actingAs($this->admin)->delete(route('master.user.destroy', $budi->id_user), ['confirm_name' => 'Budi'])
+            ->assertSessionHas('error');
+        $this->assertNotNull($budi->fresh());
+
+        $this->actingAs($this->admin)->delete(route('master.user.destroy', $budi->id_user), ['confirm_name' => 'Budi Santoso']);
+        $this->assertNull($budi->fresh());
+    }
 }

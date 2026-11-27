@@ -43,7 +43,8 @@
                             <x-row-actions
                                 :edit="['id' => $subUnit->id_sub_unit, 'nama_sub_unit' => $subUnit->nama_sub_unit, 'id_unit' => $subUnit->id_unit]"
                                 :destroy="route('master.sub-unit.destroy', $subUnit->id_sub_unit)"
-                                :confirm="'Hapus sub unit “' . $subUnit->nama_sub_unit . '”?'" />
+                                :confirm="'Hapus sub unit “' . $subUnit->nama_sub_unit . '”?'"
+                                :name="$subUnit->nama_sub_unit" />
                         </x-ui.table.cell>
                     </x-ui.table.row>
                 @empty

@@ -85,7 +85,8 @@
                                     'id_pegawai_kehadiran' => $user->id_pegawai_kehadiran,
                                 ]"
                                 :destroy="$user->id_user !== auth()->id() ? route('master.user.destroy', $user->id_user) : null"
-                                :confirm="'Hapus user “' . $user->nama_lengkap . '”?'" />
+                                :confirm="'Hapus user “' . $user->nama_lengkap . '”?'"
+                                :name="$user->nama_lengkap" />
                         </x-ui.table.cell>
                     </x-ui.table.row>
                 @empty

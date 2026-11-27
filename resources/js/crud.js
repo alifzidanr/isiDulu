@@ -42,13 +42,19 @@ export function registerCrud(Alpine) {
             return updateUrl.replace('__ID__', this.editing.id ?? '');
         },
 
-        confirmDelete(form, title, description) {
+        confirmDelete(form, title, description, name = null) {
             window.toast.confirm({
                 title,
                 description: description ?? 'Data akan dihapus permanen dan tidak bisa dikembalikan.',
                 confirmLabel: 'Hapus',
                 destructive: true,
-                onConfirm: () => form.submit(),
+                // Type the item's name before Hapus is enabled (checked again on the server).
+                requireText: name || null,
+                onConfirm: (typed) => {
+                    const field = form.querySelector('[name=confirm_name]');
+                    if (field) field.value = typed ?? '';
+                    form.submit();
+                },
             });
         },
     }));

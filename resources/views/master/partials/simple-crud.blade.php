@@ -39,7 +39,8 @@
                             <x-row-actions
                                 :edit="['id' => $item->{$idField}, $field => $item->{$field}]"
                                 :destroy="route($route . '.destroy', $item->{$idField})"
-                                :confirm="'Hapus ' . $noun . ' “' . $item->{$field} . '”?'" />
+                                :confirm="'Hapus ' . $noun . ' “' . $item->{$field} . '”?'"
+                                :name="$item->{$field}" />
                         </x-ui.table.cell>
                     </x-ui.table.row>
                 @empty

@@ -4,6 +4,8 @@
 //   toast.error('Gagal', { description: '...' })
 //   toast.confirm({ title: 'Hapus kampus?', description: '...', confirmLabel: 'Hapus',
 //                   destructive: true, onConfirm: () => form.submit() })
+//   requireText: 'Kampus A' adds a box where that exact text must be typed before
+//   the confirm button works; onConfirm then receives what was typed.
 //
 // Confirmations are toasts with action buttons rather than modal dialogs, so
 // the page stays usable while one is open. The <x-ui.toaster /> component in
@@ -18,7 +20,7 @@ export function registerToasts(Alpine) {
 
         add(toast) {
             const id = nextId++;
-            const item = { id, type: 'default', title: '', description: '', ...toast };
+            const item = { id, type: 'default', title: '', description: '', typed: '', ...toast };
             this.items.push(item);
             // Keep the stack short: drop the oldest non-confirm toast.
             if (this.items.length > 4) {
@@ -34,10 +36,16 @@ export function registerToasts(Alpine) {
             this.items = this.items.filter((t) => t.id !== id);
         },
 
+        /** True once a confirm toast's required text (if any) has been typed exactly. */
+        ready(item) {
+            return !item?.requireText || (item.typed ?? '').trim() === String(item.requireText).trim();
+        },
+
         confirm(id) {
             const item = this.items.find((t) => t.id === id);
+            if (!this.ready(item)) return;
             this.remove(id);
-            item?.onConfirm?.();
+            item?.onConfirm?.(item.typed);
         },
 
         cancel(id) {

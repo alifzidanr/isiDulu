@@ -38,10 +38,23 @@
                 <p class="text-sm font-medium" x-text="t.title"></p>
                 <p class="text-muted-foreground text-sm" x-show="t.description" x-text="t.description"></p>
 
+                {{-- Type-to-confirm (toast.confirm({ requireText })): e.g. the name of what's being deleted. --}}
+                <template x-if="t.type === 'confirm' && t.requireText">
+                    <div class="mt-2 grid gap-1.5">
+                        <p class="text-muted-foreground text-xs">
+                            Ketik <span class="text-foreground font-semibold break-all" x-text="t.requireText"></span> untuk konfirmasi.
+                        </p>
+                        <input type="text" x-model="t.typed" x-init="$nextTick(() => $el.focus())" autocomplete="off" autocapitalize="off" spellcheck="false"
+                               x-on:keydown.enter.prevent="$store.toasts.confirm(t.id)" aria-label="Ketik nama untuk konfirmasi"
+                               class="border-input h-8 w-full rounded-md border bg-transparent px-2.5 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50">
+                    </div>
+                </template>
+
                 <template x-if="t.type === 'confirm'">
                     <div class="mt-2 flex gap-2">
                         <button type="button" x-on:click="$store.toasts.confirm(t.id)" x-text="t.confirmLabel"
-                                class="inline-flex h-8 cursor-pointer items-center rounded-md px-3 text-xs font-medium shadow-xs transition-colors"
+                                x-bind:disabled="!$store.toasts.ready(t)"
+                                class="inline-flex h-8 cursor-pointer items-center rounded-md px-3 text-xs font-medium shadow-xs transition-colors disabled:cursor-not-allowed disabled:opacity-50"
                                 :class="t.destructive ? 'bg-destructive text-white hover:bg-destructive/90' : 'bg-primary text-primary-foreground hover:bg-primary/90'"></button>
                         <button type="button" x-on:click="$store.toasts.cancel(t.id)" x-text="t.cancelLabel"
                                 class="hover:bg-accent inline-flex h-8 cursor-pointer items-center rounded-md border px-3 text-xs font-medium shadow-xs transition-colors"></button>

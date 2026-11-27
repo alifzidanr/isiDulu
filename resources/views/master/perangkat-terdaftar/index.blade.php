@@ -50,7 +50,8 @@
                                     'inventaris' => $perangkat->inventaris,
                                 ]"
                                 :destroy="route('master.perangkat-terdaftar.destroy', $perangkat->id_perangkat_terdaftar)"
-                                :confirm="'Hapus perangkat “' . $perangkat->nama_perangkat_terdaftar . '”?'" />
+                                :confirm="'Hapus perangkat “' . $perangkat->nama_perangkat_terdaftar . '”?'"
+                                :name="$perangkat->nama_perangkat_terdaftar" />
                         </x-ui.table.cell>
                     </x-ui.table.row>
                 @empty

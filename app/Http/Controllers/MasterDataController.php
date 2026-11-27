@@ -46,9 +46,13 @@ class MasterDataController extends Controller
         return redirect()->route('master.kampus.index')->with('success', 'Kampus berhasil diupdate!');
     }
 
-    public function kampusDestroy($id)
+    public function kampusDestroy(Request $request, $id)
     {
         $kampus = Kampus::findOrFail($id);
+
+        if ($refused = $this->refuseUnlessNameTyped($request, $kampus->nama_kampus, 'master.kampus.index')) {
+            return $refused;
+        }
         $kampus->delete();
         return redirect()->route('master.kampus.index')->with('success', 'Kampus berhasil dihapus!');
     }
@@ -84,9 +88,13 @@ class MasterDataController extends Controller
         return redirect()->route('master.unit.index')->with('success', 'Unit berhasil diupdate!');
     }
 
-    public function unitDestroy($id)
+    public function unitDestroy(Request $request, $id)
     {
         $unit = Unit::findOrFail($id);
+
+        if ($refused = $this->refuseUnlessNameTyped($request, $unit->nama_unit, 'master.unit.index')) {
+            return $refused;
+        }
         $unit->delete();
         return redirect()->route('master.unit.index')->with('success', 'Unit berhasil dihapus!');
     }
@@ -122,9 +130,13 @@ class MasterDataController extends Controller
         return redirect()->route('master.sub-unit.index')->with('success', 'Sub Unit berhasil diupdate!');
     }
 
-    public function subUnitDestroy($id)
+    public function subUnitDestroy(Request $request, $id)
     {
         $subUnit = SubUnit::findOrFail($id);
+
+        if ($refused = $this->refuseUnlessNameTyped($request, $subUnit->nama_sub_unit, 'master.sub-unit.index')) {
+            return $refused;
+        }
         $subUnit->delete();
         return redirect()->route('master.sub-unit.index')->with('success', 'Sub Unit berhasil dihapus!');
     }
@@ -200,9 +212,13 @@ class MasterDataController extends Controller
         return redirect()->route('master.user.index')->with('success', 'User berhasil diupdate!');
     }
 
-    public function userDestroy($id)
+    public function userDestroy(Request $request, $id)
     {
         $user = User::findOrFail($id);
+
+        if ($refused = $this->refuseUnlessNameTyped($request, $user->nama_lengkap, 'master.user.index')) {
+            return $refused;
+        }
 
         if ($user->id_user === auth()->id()) {
             return redirect()->route('master.user.index')->with('error', 'Anda tidak bisa menghapus akun Anda sendiri.');
@@ -247,9 +263,13 @@ class MasterDataController extends Controller
         return redirect()->route('master.jenis-perangkat.index')->with('success', 'Jenis Perangkat berhasil diupdate!');
     }
 
-    public function jenisPerangkatDestroy($id)
+    public function jenisPerangkatDestroy(Request $request, $id)
     {
         $jenisPerangkat = JenisPerangkat::findOrFail($id);
+
+        if ($refused = $this->refuseUnlessNameTyped($request, $jenisPerangkat->nama_perangkat, 'master.jenis-perangkat.index')) {
+            return $refused;
+        }
         $jenisPerangkat->delete();
         return redirect()->route('master.jenis-perangkat.index')->with('success', 'Jenis Perangkat berhasil dihapus!');
     }
@@ -282,9 +302,13 @@ class MasterDataController extends Controller
         return redirect()->route('master.jenis-perawatan.index')->with('success', 'Jenis Perawatan berhasil diupdate!');
     }
 
-    public function jenisPerawatanDestroy($id)
+    public function jenisPerawatanDestroy(Request $request, $id)
     {
         $jenisPerawatan = JenisPerawatan::findOrFail($id);
+
+        if ($refused = $this->refuseUnlessNameTyped($request, $jenisPerawatan->nama_perawatan, 'master.jenis-perawatan.index')) {
+            return $refused;
+        }
         $jenisPerawatan->delete();
         return redirect()->route('master.jenis-perawatan.index')->with('success', 'Jenis Perawatan berhasil dihapus!');
     }
@@ -317,9 +341,13 @@ class MasterDataController extends Controller
         return redirect()->route('master.detail-perawatan.index')->with('success', 'Detail Perawatan berhasil diupdate!');
     }
 
-    public function detailPerawatanDestroy($id)
+    public function detailPerawatanDestroy(Request $request, $id)
     {
         $detailPerawatan = DetailPerawatan::findOrFail($id);
+
+        if ($refused = $this->refuseUnlessNameTyped($request, $detailPerawatan->nama_detail_perawatan, 'master.detail-perawatan.index')) {
+            return $refused;
+        }
         $detailPerawatan->delete();
         return redirect()->route('master.detail-perawatan.index')->with('success', 'Detail Perawatan berhasil dihapus!');
     }
@@ -359,10 +387,27 @@ class MasterDataController extends Controller
         return redirect()->route('master.perangkat-terdaftar.index')->with('success', 'Perangkat Terdaftar berhasil diupdate!');
     }
 
-    public function perangkatTerdaftarDestroy($id)
+    public function perangkatTerdaftarDestroy(Request $request, $id)
     {
         $perangkatTerdaftar = PerangkatTerdaftar::findOrFail($id);
+
+        if ($refused = $this->refuseUnlessNameTyped($request, $perangkatTerdaftar->nama_perangkat_terdaftar, 'master.perangkat-terdaftar.index')) {
+            return $refused;
+        }
         $perangkatTerdaftar->delete();
         return redirect()->route('master.perangkat-terdaftar.index')->with('success', 'Perangkat Terdaftar berhasil dihapus!');
+    }
+
+    /**
+     * Every delete asks the admin to type the item's name exactly (row-actions
+     * fills confirm_name); refuse the delete when it doesn't match.
+     */
+    private function refuseUnlessNameTyped(Request $request, ?string $name, string $route): ?\Illuminate\Http\RedirectResponse
+    {
+        if (trim((string) $request->input('confirm_name')) === trim((string) $name)) {
+            return null;
+        }
+
+        return redirect()->route($route)->with('error', 'Data tidak dihapus: nama yang diketik tidak sesuai.');
     }
 }
