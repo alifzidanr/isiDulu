@@ -45,13 +45,6 @@
                             Masuk dengan Fingerprint / Face ID
                         </x-ui.button>
                     </div>
-                    <x-ui.button variant="ghost" class="w-full" :href="route('kehadiran.sso')" icon="log-in">
-                        Masuk lewat Kehadiran
-                    </x-ui.button>
-                    <p class="text-muted-foreground text-center text-xs">
-                        Khusus pegawai Direktorat TI &amp; TD. Passkey yang sama dengan Kehadiran dan HRIS;
-                        di perangkat tanpa passkey, pakai "Masuk lewat Kehadiran".
-                    </p>
                 </div>
             </x-ui.card.content>
         </x-ui.card>

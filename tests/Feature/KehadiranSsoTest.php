@@ -7,7 +7,7 @@ use Tests\Concerns\PasskeyFixtures;
 use Tests\TestCase;
 
 /**
- * "Masuk lewat Kehadiran": tokens built the same way as Kehadiran's
+ * Shared sign-in with Kehadiran: tokens built the same way as Kehadiran's
  * IsiduluSsoController::token().
  */
 class KehadiranSsoTest extends TestCase
@@ -74,6 +74,31 @@ class KehadiranSsoTest extends TestCase
         session()->put('kehadiran_sso_state', $state);
         $this->get('/kehadiran/sso/callback?token='.$token)->assertRedirect(route('login'));
 
+        $this->assertGuest();
+    }
+
+    public function test_login_page_checks_kehadiran_silently_once_per_session(): void
+    {
+        $this->get('/login')->assertRedirect(route('kehadiran.sso', ['prompt' => 'none']));
+
+        $location = $this->get(route('kehadiran.sso', ['prompt' => 'none']))->headers->get('Location');
+        $this->assertStringContainsString('prompt=none', $location);
+
+        // Kehadiran says "not signed in": back to the form, and no loop.
+        $this->get('/kehadiran/sso/callback?error=login_required')->assertRedirect(route('login'));
+        $this->get('/login')->assertOk()->assertSee('Masuk ke HelpDesk');
+        $this->assertGuest();
+    }
+
+    public function test_logging_out_does_not_sign_straight_back_in(): void
+    {
+        $this->member();
+        $state = $this->startSso();
+        $this->get('/kehadiran/sso/callback?token='.$this->token(['sub' => 10, 'state' => $state]))->assertRedirect(route('dashboard'));
+
+        $this->post('/logout');
+
+        $this->get('/login')->assertOk();
         $this->assertGuest();
     }
 }

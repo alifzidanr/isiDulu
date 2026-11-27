@@ -9,8 +9,19 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    public function showLoginForm()
+    /**
+     * Once per session, first ask Kehadiran (silently) whether this browser
+     * is already signed in there; if so the pegawai comes back signed in
+     * here too (KehadiranSsoController). Otherwise the form is shown.
+     */
+    public function showLoginForm(Request $request)
     {
+        if (config('kehadiran.sso_url') && config('kehadiran.sync_secret')
+            && ! $request->session()->has(KehadiranSsoController::CHECKED_KEY)
+            && ! $request->session()->has('errors')) {
+            return redirect()->route('kehadiran.sso', ['prompt' => 'none']);
+        }
+
         return view('auth.login');
     }
 
@@ -45,6 +56,10 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        // Don't sign straight back in through Kehadiran after logging out.
+        $request->session()->put(KehadiranSsoController::CHECKED_KEY, true);
+
         return redirect('/');
     }
 }

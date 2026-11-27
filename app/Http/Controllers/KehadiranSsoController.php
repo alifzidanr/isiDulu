@@ -11,14 +11,18 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 /**
- * "Masuk lewat Kehadiran": the browser goes to Kehadiran, signs in there
- * (passkey, password or an existing session) and comes back with a token
- * signed by Kehadiran's IsiduluSsoController. Only Direktorat TI&TD members
- * on the synced roster (kehadiran_pegawai) get in.
+ * Shared sign-in with Kehadiran: the login page sends the browser to
+ * Kehadiran once per session (prompt=none). If it's signed in there, it
+ * comes back with a token signed by Kehadiran's IsiduluSsoController and is
+ * signed in here too; if not, it comes back with `error` and sees the login
+ * form. Only Direktorat TI&TD members on the synced roster get in.
  */
 class KehadiranSsoController extends Controller
 {
     private const STATE_KEY = 'kehadiran_sso_state';
+
+    /** Set once this session has asked Kehadiran (or logged out), so the login page shows the form. */
+    public const CHECKED_KEY = 'kehadiran_sso_checked';
 
     public function redirect(Request $request): RedirectResponse
     {
@@ -27,13 +31,23 @@ class KehadiranSsoController extends Controller
 
         $state = Str::random(40);
         $request->session()->put(self::STATE_KEY, $state);
+        $request->session()->put(self::CHECKED_KEY, true);
 
-        return redirect()->away($url.'?'.http_build_query(['state' => $state]));
+        return redirect()->away($url.'?'.http_build_query(array_filter([
+            'state' => $state,
+            'prompt' => $request->query('prompt') === 'none' ? 'none' : null,
+        ])));
     }
 
     public function callback(Request $request): RedirectResponse
     {
         $expected = $request->session()->pull(self::STATE_KEY);
+
+        // Not signed in to Kehadiran, or not TI&TD: just show the login form.
+        if ($request->filled('error')) {
+            return redirect()->route('login');
+        }
+
         $claims = $this->claims((string) $request->query('token', ''));
 
         if (! $claims
