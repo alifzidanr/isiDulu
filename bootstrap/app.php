@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\CheckAccessLevel;
 use App\Http\Middleware\RedirectLegacyHost;
+use App\Http\Middleware\EnsurePasswordIsSet;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Add your custom middleware alias here
         $middleware->prepend(RedirectLegacyHost::class);
+        $middleware->appendToGroup('web', EnsurePasswordIsSet::class);
 
         $middleware->alias([
             'access.level' => CheckAccessLevel::class,

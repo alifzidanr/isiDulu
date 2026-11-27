@@ -24,6 +24,10 @@ class User extends Authenticatable
         'access_level',
     ];
 
+    protected $casts = [
+        'password_changed_at' => 'datetime',
+    ];
+
     protected $hidden = [
         'password',
         'remember_token',

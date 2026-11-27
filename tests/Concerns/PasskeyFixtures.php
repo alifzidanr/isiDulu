@@ -53,6 +53,7 @@ trait PasskeyFixtures
             $t->timestamps();
         });
         (require base_path('database/migrations/2026_11_26_000001_create_kehadiran_passkey_tables.php'))->up();
+        (require base_path('database/migrations/2026_11_28_000002_add_password_changed_at_to_user_table.php'))->up();
         (require base_path('database/migrations/2026_11_27_000001_create_user_passkeys_table.php'))->up();
 
         DB::table('kampus')->insert(['id_kampus' => 1, 'nama_kampus' => 'Kebayoran Baru']);

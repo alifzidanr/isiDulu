@@ -79,6 +79,12 @@
             <x-ui.card.description>Gunakan kata sandi yang kuat dan tidak dipakai di tempat lain.</x-ui.card.description>
         </x-ui.card.header>
         <x-ui.card.content>
+            @if (session(App\Http\Middleware\EnsurePasswordIsSet::VIA_PASSKEY) && $user->password_changed_at === null)
+                <x-ui.alert variant="warning" icon="triangle-alert" class="mb-4">
+                    Anda masuk dengan passkey dan belum punya kata sandi sendiri. Buat kata sandi baru sekarang untuk melanjutkan
+                    &mdash; kata sandi saat ini tidak perlu diisi.
+                </x-ui.alert>
+            @endif
             <form method="POST" action="{{ route('profile.password') }}" class="grid gap-4"
                   x-data="passkey({ options: @js(route('passkey.options')), verify: @js(route('passkey.confirm')), mode: 'confirm' })"
                   x-init="confirmed = @js($passkeyConfirmed)">

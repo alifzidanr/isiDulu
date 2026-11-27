@@ -68,7 +68,7 @@ class ProfileController extends Controller
             ]);
         }
 
-        $user->forceFill(['password' => Hash::make($validated['password'])])->save();
+        $user->forceFill(['password' => Hash::make($validated['password']), 'password_changed_at' => now()])->save();
         $request->session()->forget('auth.password_confirmed_at');
 
         return back()->with('success', 'Kata sandi berhasil diubah.');

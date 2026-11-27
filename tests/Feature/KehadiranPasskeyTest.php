@@ -118,6 +118,34 @@ class KehadiranPasskeyTest extends TestCase
         $this->assertSame([Base64UrlSafe::encodeUnpadded($this->credentialId)], array_column($options['allowCredentials'], 'id'));
     }
 
+    public function test_first_passkey_login_must_set_a_password_first(): void
+    {
+        $this->push([$this->pegawai(10, 'Ani', 'ani@al-azhar.or.id')]);
+        $this->postJson('/passkey/login', ['credential' => $this->assertion()])->assertOk();
+
+        $this->get('/dashboard')->assertRedirect(route('profile.edit') . '#ganti-password');
+        $this->get('/profil')->assertOk()->assertSee('belum punya kata sandi sendiri');
+
+        // The passkey counts as confirmation: no current password needed.
+        $this->put('/profil/password', ['password' => 'rahasia-baru', 'password_confirmation' => 'rahasia-baru'])
+            ->assertSessionHasNoErrors();
+        $this->assertNotNull(User::where('id_pegawai_kehadiran', 10)->value('password_changed_at'));
+
+        // No longer sent back to the password form (the test DB has no
+        // permohonan table, so the dashboard itself can't render here).
+        $this->assertFalse($this->get('/dashboard')->isRedirect(route('profile.edit') . '#ganti-password'));
+    }
+
+    public function test_password_logins_are_not_redirected(): void
+    {
+        $this->push([$this->pegawai(10, 'Ani', 'ani@al-azhar.or.id')]);
+
+        $this->post('/login', ['email' => 'ani@al-azhar.or.id', 'password' => 'password123']);
+
+        $this->assertAuthenticated();
+        $this->get('/profil')->assertOk()->assertDontSee('belum punya kata sandi sendiri');
+    }
+
     private function pegawai(int $id, string $nama, ?string $email, ?array $passkeys = null): array
     {
         return [

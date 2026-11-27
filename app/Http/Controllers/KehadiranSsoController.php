@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\EnsurePasswordIsSet;
 use App\Models\KehadiranPegawai;
 use App\Support\KehadiranAccounts;
 use Illuminate\Http\RedirectResponse;
@@ -67,6 +68,7 @@ class KehadiranSsoController extends Controller
 
         Auth::login(KehadiranAccounts::userFor($pegawai));
         $request->session()->regenerate();
+        EnsurePasswordIsSet::markPasskeyLogin($request);
 
         return redirect()->intended(route('dashboard'))->with('success', 'Berhasil masuk lewat Kehadiran.');
     }

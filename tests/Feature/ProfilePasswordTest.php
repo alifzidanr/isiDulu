@@ -29,6 +29,7 @@ class ProfilePasswordTest extends TestCase
             $t->unsignedInteger('id_pegawai_kehadiran')->nullable();
             $t->timestamps();
         });
+        (require base_path('database/migrations/2026_11_28_000002_add_password_changed_at_to_user_table.php'))->up();
 
         $this->user = User::forceCreate([
             'id_kampus' => 1, 'access_level' => 2, 'nama_lengkap' => 'Ani', 'email' => 'ani@example.com',

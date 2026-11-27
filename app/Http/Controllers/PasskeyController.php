@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\EnsurePasswordIsSet;
 use App\Support\KehadiranAccounts;
 use App\Support\KehadiranPasskeys;
 use Illuminate\Http\JsonResponse;
@@ -36,6 +37,7 @@ class PasskeyController extends Controller
 
         Auth::login(KehadiranAccounts::userFor($passkey->pegawai));
         $request->session()->regenerate();
+        EnsurePasswordIsSet::markPasskeyLogin($request);
 
         return response()->json(['redirect' => redirect()->intended(route('dashboard'))->getTargetUrl()]);
     }

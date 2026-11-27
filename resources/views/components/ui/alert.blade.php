@@ -1,9 +1,10 @@
-{{-- shadcn/ui Alert. variant: default | destructive --}}
+{{-- shadcn/ui Alert. variant: default | destructive | warning --}}
 @props(['variant' => 'default', 'icon' => null, 'title' => null])
 @php
     $variants = [
         'default' => 'bg-card text-card-foreground',
         'destructive' => 'text-destructive bg-card [&>p]:text-destructive/90',
+        'warning' => 'border-amber-300 bg-amber-50 text-amber-900',
     ];
 @endphp
 <div role="alert" {{ $attributes->merge(['class' => 'relative flex w-full items-start gap-3 rounded-lg border px-4 py-3 text-sm ' . ($variants[$variant] ?? $variants['default'])]) }}>
