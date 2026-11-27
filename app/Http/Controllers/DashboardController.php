@@ -7,6 +7,7 @@ use App\Models\Permohonan;
 use App\Models\User;
 use App\Models\Unit;
 use App\Models\Kampus;
+use App\Support\PermohonanAudience;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -32,31 +33,25 @@ class DashboardController extends Controller
                 'total_units' => Unit::count(),
             ];
         } else {
-            // For regular users, show campus-specific stats
-            $kampusId = $user->id_kampus;
-            $unitIds = Unit::where('id_kampus', $kampusId)->pluck('id_unit');
-            
+            // Everyone else: what's assigned to their kampus, unit or sub unit.
+            $mine = fn () => PermohonanAudience::visibleTo(Permohonan::query(), $user);
+
             $stats = [
-                'total_permohonan' => Permohonan::whereIn('id_unit', $unitIds)->count(),
-                'permohonan_pending' => Permohonan::whereIn('id_unit', $unitIds)->where('status_permohonan', 0)->count(),
-                'permohonan_dikerjakan' => Permohonan::whereIn('id_unit', $unitIds)->where('status_permohonan', 1)->count(),
-                'permohonan_selesai' => Permohonan::whereIn('id_unit', $unitIds)->where('status_permohonan', 2)->count(),
+                'total_permohonan' => $mine()->count(),
+                'permohonan_pending' => $mine()->where('status_permohonan', 0)->count(),
+                'permohonan_dikerjakan' => $mine()->where('status_permohonan', 1)->count(),
+                'permohonan_selesai' => $mine()->where('status_permohonan', 2)->count(),
             ];
         }
 
         // Chart data for status distribution
         $statusData = Permohonan::select('status_permohonan', DB::raw('count(*) as count'))
-            ->when(! $seesAll, function ($query) use ($user) {
-                $unitIds = Unit::where('id_kampus', $user->id_kampus)->pluck('id_unit');
-                return $query->whereIn('id_unit', $unitIds);
-            })
+            ->when(! $seesAll, fn ($query) => PermohonanAudience::visibleTo($query, $user))
             ->groupBy('status_permohonan')
             ->get();
 
         $recent = Permohonan::with('unit')
-            ->when(! $seesAll, function ($query) use ($user) {
-                return $query->whereIn('id_unit', Unit::where('id_kampus', $user->id_kampus)->pluck('id_unit'));
-            })
+            ->when(! $seesAll, fn ($query) => PermohonanAudience::visibleTo($query, $user))
             ->orderByDesc('id_permohonan')
             ->limit(5)
             ->get();

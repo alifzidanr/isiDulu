@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Support\PerPage;
+use App\Support\PermohonanAudience;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\Permohonan;
@@ -80,90 +81,7 @@ class PublicController extends Controller
      */
     private function sendTelegramNotification(Permohonan $permohonan)
     {
-        try {
-            $notification = new NewPermohonanNotification($permohonan);
-            
-            // 1. Send to group
-            $this->sendToGroup($notification);
-            
-            // 2. Send to all responsible users
-            $this->sendToResponsibleUsers($permohonan, $notification);
-            
-        } catch (\Exception $e) {
-            \Log::error('Telegram notification failed', [
-                'permohonan_id' => $permohonan->id_permohonan,
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * Send notification to Telegram group
-     */
-    private function sendToGroup($notification)
-    {
-        try {
-            $groupChatId = config('services.telegram-bot-api.group_chat_id');
-            
-            if ($groupChatId) {
-                Notification::route('telegram', $groupChatId)
-                    ->notify($notification);
-            }
-        } catch (\Exception $e) {
-            \Log::error('Failed to send to Telegram group', [
-                'error' => $e->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * Send notification to all users in charge of the kampus/unit
-     */
-    private function sendToResponsibleUsers(Permohonan $permohonan, $notification)
-    {
-        try {
-            // Load unit with kampus relationship
-            $permohonan->load('unit.kampus');
-            
-            $unitId = $permohonan->id_unit;
-            $kampusId = $permohonan->unit->id_kampus ?? null;
-            
-            // Find all users responsible for this kampus or unit
-            $responsibleUsers = User::query()
-                ->where('status', 1)
-                ->whereNotNull('telegram_id')
-                ->where('telegram_id', '!=', '')
-                ->where(function ($query) use ($kampusId, $unitId) {
-                    $query->where('id_unit', $unitId)
-                          ->orWhere('id_kampus', $kampusId);
-                })
-                ->get();
-
-            // Send to each responsible user
-            foreach ($responsibleUsers as $user) {
-                try {
-                    Notification::route('telegram', $user->telegram_id)
-                        ->notify($notification);
-                    
-                    \Log::info('Sent notification to user', [
-                        'user_id' => $user->id_user,
-                        'user_name' => $user->nama_lengkap,
-                        'telegram_id' => $user->telegram_id,
-                        'permohonan_id' => $permohonan->id_permohonan
-                    ]);
-                } catch (\Exception $e) {
-                    \Log::error('Failed to send to user', [
-                        'user_id' => $user->id_user,
-                        'telegram_id' => $user->telegram_id,
-                        'error' => $e->getMessage()
-                    ]);
-                }
-            }
-        } catch (\Exception $e) {
-            \Log::error('Failed to get responsible users', [
-                'permohonan_id' => $permohonan->id_permohonan,
-                'error' => $e->getMessage()
-            ]);
-        }
+        // The group and every user assigned to its kampus, unit or sub unit.
+        PermohonanAudience::notify($permohonan, new NewPermohonanNotification($permohonan));
     }
 }
