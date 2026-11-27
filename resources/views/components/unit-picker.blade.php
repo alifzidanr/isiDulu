@@ -52,18 +52,19 @@
      }"
      x-on:click.outside="if (!$refs.panel?.contains($event.target)) close()"
      x-on:resize.window="close()" x-on:scroll.window="close()"
-     {{ $attributes->merge(['class' => 'relative']) }}>
+     {{ $attributes->merge(['class' => 'relative min-w-0']) }}>
     <input type="hidden" name="id_unit" x-bind:value="current ? current.unit : ''">
     <input type="hidden" name="id_sub_unit" x-bind:value="current && current.sub ? current.sub : ''">
 
     <button type="button" id="{{ $id }}" x-ref="trigger" x-on:click="toggle()" aria-haspopup="listbox" x-bind:aria-expanded="open"
             @if ($invalid) aria-invalid="true" @endif
             class="border-input flex min-h-9 w-full items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-1.5 text-left text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 md:text-sm">
-        <span class="min-w-0 truncate" x-show="current">
+        {{-- min-w-0 + truncate: a long name ends in "…" instead of widening the field. --}}
+        <span class="block min-w-0 flex-1 truncate" x-show="current">
             <span class="font-medium" x-text="current?.label"></span>
             <span class="text-muted-foreground" x-text="current ? ' — ' + current.detail : ''"></span>
         </span>
-        <span class="text-muted-foreground truncate" x-show="!current">Pilih unit atau sub unit</span>
+        <span class="text-muted-foreground block min-w-0 flex-1 truncate" x-show="!current">Pilih unit atau sub unit</span>
         <x-ui.icon name="chevrons-up-down" class="text-muted-foreground size-4 shrink-0 opacity-60" />
     </button>
 
@@ -90,9 +91,9 @@
                     <span class="mt-0.5 size-4 shrink-0">
                         <span x-show="item.key === selected" class="contents"><x-ui.icon name="check" class="size-4" /></span>
                     </span>
-                    <span class="min-w-0">
-                        <span class="block" x-bind:class="item.sub ? '' : 'font-medium'" x-text="item.label"></span>
-                        <span class="text-muted-foreground block text-xs" x-text="item.detail"></span>
+                    <span class="min-w-0 flex-1">
+                        <span class="block break-words" x-bind:class="item.sub ? '' : 'font-medium'" x-text="item.label"></span>
+                        <span class="text-muted-foreground block break-words text-xs" x-text="item.detail"></span>
                     </span>
                 </li>
             </template>

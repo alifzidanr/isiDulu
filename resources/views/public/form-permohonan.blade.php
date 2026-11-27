@@ -30,7 +30,7 @@
                 <x-ui.field label="Nama Pimpinan" for="pimpinan_pemohon" name="pimpinan_pemohon" hint="Opsional.">
                     <x-ui.input id="pimpinan_pemohon" name="pimpinan_pemohon" :value="old('pimpinan_pemohon')" :invalid="$errors->has('pimpinan_pemohon')" placeholder="Pimpinan unit" />
                 </x-ui.field>
-                <x-ui.field label="Unit / Sub Unit" for="unit-picker" name="id_unit" required>
+                <x-ui.field label="Unit / Sub Unit" for="unit-picker" name="id_unit" required class="min-w-0">
                     <x-unit-picker :units="$units" :unit="old('id_unit')" :sub-unit="old('id_sub_unit')" :invalid="$errors->has('id_unit') || $errors->has('id_sub_unit')" />
                 </x-ui.field>
                 <x-ui.field label="Inventaris" for="inventaris" name="inventaris" required>

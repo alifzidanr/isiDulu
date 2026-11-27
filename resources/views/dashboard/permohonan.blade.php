@@ -144,7 +144,7 @@
             <x-ui.field label="Nama Pimpinan" for="pimpinan_pemohon" name="pimpinan_pemohon" form="create">
                 <x-ui.input id="pimpinan_pemohon" name="pimpinan_pemohon" :value="$oldIf('create', 'pimpinan_pemohon')" placeholder="Pimpinan unit (opsional)" />
             </x-ui.field>
-            <x-ui.field label="Unit / Sub Unit" for="unit-picker" name="id_unit" form="create" required>
+            <x-ui.field label="Unit / Sub Unit" for="unit-picker" name="id_unit" form="create" required class="min-w-0">
                 <x-unit-picker :units="$units" :unit="$oldIf('create', 'id_unit')" :sub-unit="$oldIf('create', 'id_sub_unit')" :invalid="$errors->has('id_unit') || $errors->has('id_sub_unit')" />
             </x-ui.field>
             <x-ui.field label="Inventaris" for="inventaris" name="inventaris" form="create" required>
