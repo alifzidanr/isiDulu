@@ -103,4 +103,20 @@ class UserSubUnitTest extends TestCase
             'inventaris' => 'n', 'keluhan' => 'Printer rusak',
         ])->assertSessionHasErrors('id_sub_unit');
     }
+
+    public function test_user_list_can_be_searched_by_name_or_email(): void
+    {
+        User::forceCreate(['id_kampus' => 1, 'access_level' => 2, 'nama_lengkap' => 'Siti Aminah', 'email' => 'siti@x.id', 'password' => 'x']);
+        User::forceCreate(['id_kampus' => 1, 'access_level' => 2, 'nama_lengkap' => 'Budi Santoso', 'email' => 'budi.s@x.id', 'password' => 'x']);
+
+        $names = fn ($q) => $this->actingAs($this->admin)->get(route('master.user.index', ['q' => $q]))
+            ->viewData('users')->pluck('nama_lengkap')->all();
+
+        $this->assertSame(['Siti Aminah'], $names('aminah'));
+        $this->assertSame(['Budi Santoso'], $names('BUDI.S'));
+        $this->assertCount(3, $names(''));
+
+        $this->actingAs($this->admin)->get(route('master.user.index', ['q' => 'zzz']))
+            ->assertSee('Tidak ada user yang cocok');
+    }
 }

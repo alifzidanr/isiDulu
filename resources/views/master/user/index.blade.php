@@ -21,6 +21,19 @@
     </x-ui.page-header>
 
     <x-ui.card flush>
+        {{-- Search by name or email (?q=); keeps the chosen rows per page. --}}
+        <form method="GET" action="{{ route('master.user.index') }}" role="search" class="flex items-center gap-2 border-b p-3 sm:p-4"
+              x-data x-on:search="if (!$event.target.value) $el.submit()">
+            @if (request()->filled('per_page'))<input type="hidden" name="per_page" value="{{ request('per_page') }}">@endif
+            <div class="relative w-full sm:max-w-xs">
+                <x-ui.icon name="search" class="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+                <x-ui.input type="search" name="q" :value="$search" placeholder="Cari nama atau email…" aria-label="Cari user" class="pl-8" autocomplete="off" />
+            </div>
+            <x-ui.button type="submit" variant="outline">Cari</x-ui.button>
+            @if ($search !== '')
+                <x-ui.button variant="ghost" :href="route('master.user.index', request()->filled('per_page') ? ['per_page' => request('per_page')] : [])">Reset</x-ui.button>
+            @endif
+        </form>
         <x-ui.table>
             <x-ui.table.header>
                 <x-ui.table.head>Nama</x-ui.table.head>
@@ -35,12 +48,14 @@
                         <x-ui.table.cell>
                             <div class="flex items-center gap-3">
                                 <x-ui.avatar :name="$user->nama_lengkap" />
-                                <div class="grid min-w-0">
+                                {{-- min-w-40: on phones the other columns would otherwise squeeze this to nothing. --}}
+                                <div class="grid min-w-40 max-w-72">
                                     <span class="truncate font-medium">{{ $user->nama_lengkap }}</span>
                                     <span class="text-muted-foreground truncate text-xs">{{ $user->email }}</span>
                                 </div>
                                 @if ($user->id_pegawai_kehadiran)
-                                    <x-ui.badge variant="outline" title="Terhubung dengan Kehadiran: bisa masuk dengan fingerprint/Face ID"><x-ui.icon name="fingerprint" class="size-3" /> Kehadiran</x-ui.badge>
+                                    {{-- Hidden on phones so the name and email get the room. --}}
+                                    <span class="hidden sm:contents"><x-ui.badge variant="outline" title="Terhubung dengan Kehadiran: bisa masuk dengan fingerprint/Face ID"><x-ui.icon name="fingerprint" class="size-3" /> Kehadiran</x-ui.badge></span>
                                 @endif
                             </div>
                         </x-ui.table.cell>
@@ -51,7 +66,7 @@
                             </x-ui.badge>
                         </x-ui.table.cell>
                         <x-ui.table.cell>
-                            <div class="grid">
+                            <div class="grid whitespace-nowrap">
                                 <span>{{ $user->kampus->nama_kampus ?? '—' }}</span>
                                 @if ($user->unit)<span class="text-muted-foreground text-xs">{{ $user->unit->nama_unit }}@if ($user->subUnit) &rsaquo; {{ $user->subUnit->nama_sub_unit }}@endif</span>@endif
                             </div>
@@ -74,7 +89,11 @@
                         </x-ui.table.cell>
                     </x-ui.table.row>
                 @empty
-                    <x-ui.table.empty colspan="5" title="Belum ada user" icon="users" />
+                    @if ($search !== '')
+                        <x-ui.table.empty colspan="5" title="Tidak ada user yang cocok" :description="'Tidak ditemukan nama atau email dengan “' . $search . '”.'" icon="search" />
+                    @else
+                        <x-ui.table.empty colspan="5" title="Belum ada user" icon="users" />
+                    @endif
                 @endforelse
             </x-ui.table.body>
         </x-ui.table>

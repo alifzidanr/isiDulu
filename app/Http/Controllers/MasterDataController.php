@@ -130,14 +130,23 @@ class MasterDataController extends Controller
     }
 
     // USER METHODS
-    public function userIndex()
+    public function userIndex(Request $request)
     {
-        $users = User::with(['kampus', 'unit', 'subUnit'])->orderBy('nama_lengkap')->paginate(PerPage::get())->withQueryString();
+        // ?q= searches names (and emails), case-insensitively.
+        $search = trim((string) $request->query('q', ''));
+
+        $users = User::with(['kampus', 'unit', 'subUnit'])
+            ->when($search !== '', function ($query) use ($search) {
+                $like = '%' . mb_strtolower($search) . '%';
+                $query->where(fn ($w) => $w->whereRaw('LOWER(nama_lengkap) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(email) LIKE ?', [$like]));
+            })
+            ->orderBy('nama_lengkap')->paginate(PerPage::get())->withQueryString();
         $kampuses = Kampus::all();
         $units = Unit::all();
         $subUnits = SubUnit::orderBy('nama_sub_unit')->get(['id_sub_unit', 'nama_sub_unit', 'id_unit']);
         $pegawaiKehadiran = \App\Models\KehadiranPegawai::orderBy('nama_lengkap')->get();
-        return view('master.user.index', compact('users', 'kampuses', 'units', 'subUnits', 'pegawaiKehadiran'));
+        return view('master.user.index', compact('users', 'kampuses', 'units', 'subUnits', 'pegawaiKehadiran', 'search'));
     }
 
     public function userStore(Request $request)
