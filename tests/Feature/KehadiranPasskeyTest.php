@@ -158,12 +158,13 @@ class KehadiranPasskeyTest extends TestCase
         $this->assertSame('Doni Sutrisno', $ttd['nama']);
         $this->assertSame('data:image/png;base64,'.base64_encode($png), $ttd['gambar']);
 
-        // Not a PNG: name kept, image dropped.
+        // Not a PNG, or no signature at all: the saved one stays.
         $this->push([], ['penandatangan' => ['nama_lengkap' => 'Doni Sutrisno', 'tanda_tangan' => base64_encode('<svg onload=alert(1)>')]])->assertOk();
-        $this->assertNull(Penandatangan::current()['gambar']);
+        $this->assertSame('data:image/png;base64,'.base64_encode($png), Penandatangan::current()['gambar']);
+        $this->push([], ['penandatangan' => ['nama_lengkap' => 'Doni Sutrisno', 'tanda_tangan' => null]])->assertOk();
+        $this->assertNotNull(Penandatangan::current()['gambar']);
 
         // Older pushes without the key leave it alone; null clears it.
-        $this->push([], ['penandatangan' => ['nama_lengkap' => 'Doni Sutrisno', 'tanda_tangan' => base64_encode($png)]]);
         $this->push([])->assertOk();
         $this->assertNotNull(Penandatangan::current()['gambar']);
         $this->push([], ['penandatangan' => null])->assertOk();

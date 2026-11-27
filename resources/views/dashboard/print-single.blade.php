@@ -6,21 +6,17 @@
 </head>
 <body class="bg-muted/40 print:bg-white">
     @php
-        $sections = [
-            'Informasi Pemohon' => [
-                'Tanggal Permohonan' => $permohonan->tanggal->translatedFormat('d F Y'),
-                'Nama Pemohon' => $permohonan->nama_pemohon,
-                'Email' => $permohonan->email_pemohon ?: '-',
-                'Kontak' => $permohonan->kontak_pemohon,
-                'Nama Pimpinan' => $permohonan->pimpinan_pemohon ?: '-',
-            ],
-            'Informasi Unit' => [
-                'Kampus' => $permohonan->unit->kampus->nama_kampus ?? '-',
-                'Unit' => $permohonan->unit->nama_unit ?? '-',
-                'Sub Unit' => $permohonan->subUnit->nama_sub_unit ?? '-',
-                'Status Inventaris' => $permohonan->inventaris === 'y' ? 'Inventaris' : 'Non-Inventaris',
-            ],
+        $informasi = [
+            'Tanggal Permohonan' => $permohonan->tanggal->translatedFormat('d F Y'),
+            'Nama' => $permohonan->nama_pemohon,
+            'Kampus' => $permohonan->unit->kampus->nama_kampus ?? '-',
+            'Unit' => $permohonan->unit->nama_unit ?? '-',
+            'Sub Unit' => $permohonan->subUnit->nama_sub_unit ?? '-',
+            'Status Inventaris' => $permohonan->inventaris === 'y' ? 'Inventaris' : 'Non-Inventaris',
         ];
+        // The petugas is whoever wrote the laporan (id_user is only a default PIC).
+        $petugas = $permohonan->laporan?->creator?->nama_lengkap;
+        $ttd = \App\Support\Penandatangan::current();
     @endphp
 
     <div class="mx-auto max-w-3xl p-4 sm:p-8 print:max-w-none print:p-0">
@@ -39,26 +35,19 @@
                             <p class="text-muted-foreground text-sm">HelpDesk YPI Al Azhar · Sistem Manajemen Permohonan Layanan</p>
                         </div>
                     </div>
-                    <div class="grid justify-items-end gap-1 text-right">
-                        <span class="text-muted-foreground text-xs">No. #{{ $permohonan->id_permohonan }}</span>
-                        <x-status-badge :status="$permohonan->status_permohonan" />
-                    </div>
+                    <x-status-badge :status="$permohonan->status_permohonan" />
                 </div>
 
-                <div class="grid gap-8 sm:grid-cols-2 print:grid-cols-2">
-                    @foreach ($sections as $heading => $rows)
-                        <div class="grid content-start gap-3">
-                            <h2 class="text-sm font-semibold">{{ $heading }}</h2>
-                            <dl class="grid gap-3">
-                                @foreach ($rows as $label => $value)
-                                    <div class="grid gap-0.5">
-                                        <dt class="text-muted-foreground text-xs">{{ $label }}</dt>
-                                        <dd class="text-sm">{{ $value }}</dd>
-                                    </div>
-                                @endforeach
-                            </dl>
-                        </div>
-                    @endforeach
+                <div class="grid gap-3">
+                    <h2 class="text-sm font-semibold">Informasi Pemohon</h2>
+                    <dl class="grid gap-x-8 gap-y-3 sm:grid-cols-2 print:grid-cols-2">
+                        @foreach ($informasi as $label => $value)
+                            <div class="grid gap-0.5">
+                                <dt class="text-muted-foreground text-xs">{{ $label }}</dt>
+                                <dd class="text-sm">{{ $value }}</dd>
+                            </div>
+                        @endforeach
+                    </dl>
                 </div>
 
                 <div class="grid gap-2">
@@ -66,10 +55,14 @@
                     <p class="bg-muted/50 rounded-lg border p-4 text-sm whitespace-pre-wrap">{{ $permohonan->keluhan }}</p>
                 </div>
 
-                {{-- Signed by the person in charge of isiDulu (from Kehadiran). --}}
-                @php($ttd = \App\Support\Penandatangan::current())
-                <div class="flex justify-end break-inside-avoid">
-                    <div class="grid w-56 justify-items-center gap-1 text-center text-sm">
+                {{-- Petugas bottom left; signed bottom right by the person in charge of isiDulu. --}}
+                <div class="flex items-end justify-between gap-8 break-inside-avoid text-sm">
+                    <div class="grid w-56 justify-items-center gap-1 text-center">
+                        <p>Petugas</p>
+                        <div class="h-20"></div>
+                        <p class="w-full border-t pt-1 font-semibold">{{ $petugas ?? '-' }}</p>
+                    </div>
+                    <div class="grid w-56 justify-items-center gap-1 text-center">
                         <p>Jakarta, {{ now()->translatedFormat('d F Y') }}</p>
                         <p>{{ $ttd['jabatan'] }}</p>
                         <div class="flex h-20 w-full items-center justify-center">

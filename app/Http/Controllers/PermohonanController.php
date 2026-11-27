@@ -159,7 +159,7 @@ class PermohonanController extends Controller
 
     public function printSingle($id)
     {
-        $permohonan = $this->findVisible($id, ['unit', 'subUnit']);
+        $permohonan = $this->findVisible($id, ['unit.kampus', 'subUnit', 'laporan.creator']);
         return view('dashboard.print-single', compact('permohonan'));
     }
 

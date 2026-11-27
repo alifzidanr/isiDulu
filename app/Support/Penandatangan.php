@@ -32,13 +32,26 @@ class Penandatangan
 
         Storage::put(self::INFO, json_encode(['nama' => $data['nama_lengkap'], 'synced_at' => now()->toIso8601String()], JSON_THROW_ON_ERROR));
 
+        // Only a valid PNG replaces the saved signature. A push without one
+        // (e.g. Kehadiran can't read it) keeps whatever is already here,
+        // including one set by hand with `php artisan penandatangan:tanda-tangan`.
         $png = isset($data['tanda_tangan']) ? base64_decode($data['tanda_tangan'], true) : false;
 
-        if ($png !== false && strlen($png) <= self::MAX_BYTES && str_starts_with($png, "\x89PNG\r\n\x1a\n")) {
-            Storage::put(self::IMAGE, $png);
-        } else {
-            Storage::delete(self::IMAGE);
+        if ($png !== false) {
+            self::storeImage($png);
         }
+    }
+
+    /** Save a signature PNG. Returns false (and keeps the old one) for anything else. */
+    public static function storeImage(string $png): bool
+    {
+        if (strlen($png) > self::MAX_BYTES || ! str_starts_with($png, "\x89PNG\r\n\x1a\n")) {
+            return false;
+        }
+
+        Storage::put(self::IMAGE, $png);
+
+        return true;
     }
 
     /**
