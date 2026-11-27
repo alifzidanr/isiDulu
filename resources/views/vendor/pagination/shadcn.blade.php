@@ -53,13 +53,16 @@
 
         <label class="text-muted-foreground flex items-center gap-2 text-sm">
             Baris
+            <span class="relative inline-flex">
             <select aria-label="Baris per halaman"
-                    class="border-input h-9 rounded-md border bg-transparent py-1 pr-8 pl-3 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    class="border-input h-9 appearance-none rounded-md border bg-transparent py-1 pr-8 pl-3 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     onchange="const u = new window.URL(window.location.href); u.searchParams.set('per_page', this.value); u.searchParams.delete('{{ $paginator->getPageName() }}'); window.location.href = u.toString();">
                 @foreach (App\Support\PerPage::OPTIONS as $option)
                     <option value="{{ $option }}" @selected($option === $paginator->perPage())>{{ $option }}</option>
                 @endforeach
             </select>
+                <x-ui.icon name="chevron-down" class="text-muted-foreground pointer-events-none absolute top-1/2 right-2.5 size-4 -translate-y-1/2 opacity-50" />
+            </span>
         </label>
         </div>
     </nav>
