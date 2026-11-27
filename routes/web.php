@@ -7,6 +7,7 @@ use App\Http\Controllers\PublicController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PermohonanController;
 use App\Http\Controllers\MasterDataController;
+use App\Http\Controllers\KehadiranSsoController;
 use App\Http\Controllers\KehadiranSyncController;
 use App\Http\Controllers\PasskeyController;
 use App\Http\Controllers\ProfileController;
@@ -29,6 +30,12 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('/passkey/login', [PasskeyController::class, 'login'])->middleware('guest')->name('passkey.login');
     Route::post('/passkey/kehadiran/options', [PasskeyController::class, 'kehadiranOptions'])->name('passkey.kehadiran.options');
     Route::post('/passkey/kehadiran/login', [PasskeyController::class, 'kehadiranLogin'])->middleware('guest')->name('passkey.kehadiran.login');
+});
+
+// "Masuk lewat Kehadiran" (Direktorat TI&TD only)
+Route::middleware(['guest', 'throttle:20,1'])->group(function () {
+    Route::get('/kehadiran/sso', [KehadiranSsoController::class, 'redirect'])->name('kehadiran.sso');
+    Route::get('/kehadiran/sso/callback', [KehadiranSsoController::class, 'callback'])->name('kehadiran.sso.callback');
 });
 
 // Kehadiran pushes the Direktorat TI&TD roster and passkeys here (HMAC-signed, no session)

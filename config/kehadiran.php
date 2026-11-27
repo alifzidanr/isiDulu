@@ -30,4 +30,8 @@ return [
 
     'timeout' => 60000,
 
+    // "Masuk lewat Kehadiran" (KehadiranSsoController): Kehadiran's sign-in
+    // hand-off page. Tokens are signed with a key derived from sync_secret.
+    'sso_url' => env('KEHADIRAN_SSO_URL', 'https://kehadiran.al-azhar.id/sso/isidulu'),
+
 ];

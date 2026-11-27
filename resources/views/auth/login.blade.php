@@ -34,22 +34,23 @@
                     </x-ui.button>
                 </form>
 
-                <div x-data="{ supported: typeof window.PublicKeyCredential === 'function' }" x-show="supported" x-cloak class="mt-5 grid gap-3">
+                <div x-data="{ supported: typeof window.PublicKeyCredential === 'function' }" class="mt-5 grid gap-3">
                     <div class="text-muted-foreground flex items-center gap-3 text-xs">
                         <span class="bg-border h-px flex-1"></span> atau <span class="bg-border h-px flex-1"></span>
                     </div>
-                    <div x-data="passkey({ options: @js(route('passkey.options')), verify: @js(route('passkey.login')) })">
-                        <x-ui.button variant="outline" class="w-full" x-on:click="run()" x-bind:disabled="busy">
-                            <span x-show="!busy" class="contents"><x-ui.icon name="fingerprint" /></span>
+                    <x-ui.button variant="outline" class="w-full" :href="route('kehadiran.sso')" icon="fingerprint">
+                        Masuk lewat Kehadiran
+                    </x-ui.button>
+                    <div x-show="supported" x-cloak x-data="passkey({ options: @js(route('passkey.options')), verify: @js(route('passkey.login')) })">
+                        <x-ui.button variant="ghost" class="w-full" x-on:click="run()" x-bind:disabled="busy">
+                            <span x-show="!busy" class="contents"><x-ui.icon name="key-round" /></span>
                             <span x-show="busy" x-cloak class="contents"><x-ui.icon name="loader-circle" class="animate-spin" /></span>
-                            Masuk dengan Fingerprint / Face ID
+                            Passkey HelpDesk di perangkat ini
                         </x-ui.button>
                     </div>
                     <p class="text-muted-foreground text-center text-xs">
-                        Khusus pegawai Direktorat TI &amp; TD. Daftarkan passkey dulu di Pengaturan Profil, atau
-                        <button type="button" x-data="passkey({ options: @js(route('passkey.kehadiran.options')), verify: @js(route('passkey.kehadiran.login')) })"
-                                x-on:click="run()" x-bind:disabled="busy"
-                                class="text-primary cursor-pointer font-medium underline-offset-4 hover:underline disabled:opacity-50">pakai passkey Kehadiran</button>.
+                        Khusus pegawai Direktorat TI &amp; TD. "Masuk lewat Kehadiran" memakai login Kehadiran Anda
+                        (fingerprint/Face ID atau kata sandi) di perangkat mana pun.
                     </p>
                 </div>
             </x-ui.card.content>
