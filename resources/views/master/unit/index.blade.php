@@ -49,7 +49,7 @@
                 @endforelse
             </x-ui.table.body>
         </x-ui.table>
-        @if ($units->hasPages())
+        @if ($units->total() > 0)
             <div class="border-t px-6 py-4">{{ $units->links() }}</div>
         @endif
     </x-ui.card>

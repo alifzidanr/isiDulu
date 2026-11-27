@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\PerPage;
 use Illuminate\Http\Request;
 use App\Models\Permohonan;
 use App\Models\Unit;
@@ -16,7 +17,7 @@ class PublicController extends Controller
         $permohonans = Permohonan::with(['unit'])
             ->orderBy('tanggal', 'desc')
             ->orderBy('id_permohonan', 'desc')
-            ->paginate(25);
+            ->paginate(PerPage::get())->withQueryString();
             
         return view('public.permohonan-public', compact('permohonans'));
     }

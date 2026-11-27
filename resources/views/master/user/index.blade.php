@@ -78,7 +78,7 @@
                 @endforelse
             </x-ui.table.body>
         </x-ui.table>
-        @if ($users->hasPages())
+        @if ($users->total() > 0)
             <div class="border-t px-6 py-4">{{ $users->links() }}</div>
         @endif
     </x-ui.card>

@@ -123,7 +123,7 @@
                 @endforelse
             </x-ui.table.body>
         </x-ui.table>
-        @if ($permohonans->hasPages())
+        @if ($permohonans->total() > 0)
             <div class="border-t px-6 py-4">{{ $permohonans->links() }}</div>
         @endif
     </x-ui.card>

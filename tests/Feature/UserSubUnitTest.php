@@ -69,4 +69,21 @@ class UserSubUnitTest extends TestCase
 
         $this->assertNull(User::where('email', 'budi@x.id')->value('id_sub_unit'));
     }
+
+    public function test_tables_show_25_rows_by_default_and_the_baris_picker(): void
+    {
+        $this->actingAs($this->admin)->get(route('master.user.index'))
+            ->assertOk()
+            ->assertViewHas('users', fn ($users) => $users->perPage() === 25)
+            ->assertSee('aria-label="Baris per halaman"', false);
+    }
+
+    public function test_per_page_comes_from_the_query_and_ignores_odd_values(): void
+    {
+        $this->actingAs($this->admin)->get(route('master.user.index', ['per_page' => 10]))
+            ->assertViewHas('users', fn ($users) => $users->perPage() === 10);
+
+        $this->actingAs($this->admin)->get(route('master.user.index', ['per_page' => 9999]))
+            ->assertViewHas('users', fn ($users) => $users->perPage() === 25);
+    }
 }

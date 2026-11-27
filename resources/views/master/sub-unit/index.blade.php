@@ -51,7 +51,7 @@
                 @endforelse
             </x-ui.table.body>
         </x-ui.table>
-        @if ($subUnits->hasPages())
+        @if ($subUnits->total() > 0)
             <div class="border-t px-6 py-4">{{ $subUnits->links() }}</div>
         @endif
     </x-ui.card>

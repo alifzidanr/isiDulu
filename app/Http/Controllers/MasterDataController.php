@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\PerPage;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Models\Kampus;
@@ -20,7 +21,7 @@ class MasterDataController extends Controller
     // KAMPUS METHODS
     public function kampusIndex()
     {
-        $kampuses = Kampus::orderBy('nama_kampus')->paginate(10);
+        $kampuses = Kampus::orderBy('nama_kampus')->paginate(PerPage::get())->withQueryString();
         return view('master.kampus.index', compact('kampuses'));
     }
 
@@ -55,7 +56,7 @@ class MasterDataController extends Controller
     // UNIT METHODS
     public function unitIndex()
     {
-        $units = Unit::with('kampus')->orderBy('nama_unit')->paginate(10);
+        $units = Unit::with('kampus')->orderBy('nama_unit')->paginate(PerPage::get())->withQueryString();
         $kampuses = Kampus::all();
         return view('master.unit.index', compact('units', 'kampuses'));
     }
@@ -93,7 +94,7 @@ class MasterDataController extends Controller
     // SUB UNIT METHODS
     public function subUnitIndex()
     {
-        $subUnits = SubUnit::with('unit.kampus')->orderBy('nama_sub_unit')->paginate(10);
+        $subUnits = SubUnit::with('unit.kampus')->orderBy('nama_sub_unit')->paginate(PerPage::get())->withQueryString();
         $units = Unit::with('kampus')->get();
         return view('master.sub-unit.index', compact('subUnits', 'units'));
     }
@@ -131,7 +132,7 @@ class MasterDataController extends Controller
     // USER METHODS
     public function userIndex()
     {
-        $users = User::with(['kampus', 'unit', 'subUnit'])->orderBy('nama_lengkap')->paginate(10);
+        $users = User::with(['kampus', 'unit', 'subUnit'])->orderBy('nama_lengkap')->paginate(PerPage::get())->withQueryString();
         $kampuses = Kampus::all();
         $units = Unit::all();
         $subUnits = SubUnit::orderBy('nama_sub_unit')->get(['id_sub_unit', 'nama_sub_unit', 'id_unit']);
@@ -212,7 +213,7 @@ class MasterDataController extends Controller
     // JENIS PERANGKAT METHODS
     public function jenisPerangkatIndex()
     {
-        $jenisPerangkats = JenisPerangkat::orderBy('nama_perangkat')->paginate(10);
+        $jenisPerangkats = JenisPerangkat::orderBy('nama_perangkat')->paginate(PerPage::get())->withQueryString();
         return view('master.jenis-perangkat.index', compact('jenisPerangkats'));
     }
 
@@ -247,7 +248,7 @@ class MasterDataController extends Controller
     // JENIS PERAWATAN METHODS
     public function jenisPerawatanIndex()
     {
-        $jenisPerawatans = JenisPerawatan::orderBy('nama_perawatan')->paginate(10);
+        $jenisPerawatans = JenisPerawatan::orderBy('nama_perawatan')->paginate(PerPage::get())->withQueryString();
         return view('master.jenis-perawatan.index', compact('jenisPerawatans'));
     }
 
@@ -282,7 +283,7 @@ class MasterDataController extends Controller
     // DETAIL PERAWATAN METHODS
     public function detailPerawatanIndex()
     {
-        $detailPerawatans = DetailPerawatan::orderBy('nama_detail_perawatan')->paginate(10);
+        $detailPerawatans = DetailPerawatan::orderBy('nama_detail_perawatan')->paginate(PerPage::get())->withQueryString();
         return view('master.detail-perawatan.index', compact('detailPerawatans'));
     }
 
@@ -317,7 +318,7 @@ class MasterDataController extends Controller
     // PERANGKAT TERDAFTAR METHODS
     public function perangkatTerdaftarIndex()
     {
-        $perangkatTerdaftars = PerangkatTerdaftar::with('jenisPerangkat')->orderBy('nama_perangkat_terdaftar')->paginate(10);
+        $perangkatTerdaftars = PerangkatTerdaftar::with('jenisPerangkat')->orderBy('nama_perangkat_terdaftar')->paginate(PerPage::get())->withQueryString();
         $jenisPerangkats = JenisPerangkat::all();
         return view('master.perangkat-terdaftar.index', compact('perangkatTerdaftars', 'jenisPerangkats'));
     }

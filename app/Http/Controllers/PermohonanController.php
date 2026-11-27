@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\PerPage;
 use Illuminate\Http\Request;
 use App\Models\Permohonan;
 use App\Models\Laporan;
@@ -28,7 +29,7 @@ class PermohonanController extends Controller
             $query->whereIn('id_unit', $unitIds);
         }
 
-        $permohonans = $query->orderBy('tanggal', 'desc')->paginate(15);
+        $permohonans = $query->orderBy('tanggal', 'desc')->paginate(PerPage::get())->withQueryString();
         
         $units = Unit::with('kampus')->get();
         $jenisPerangkats = JenisPerangkat::orderBy('nama_perangkat')->get();
@@ -147,7 +148,7 @@ class PermohonanController extends Controller
             $query->whereIn('id_unit', $unitIds);
         }
 
-        $permohonans = $query->orderBy('tanggal', 'desc')->paginate(15);
+        $permohonans = $query->orderBy('tanggal', 'desc')->paginate(PerPage::get())->withQueryString();
 
         return view('dashboard.print-permohonan', compact('permohonans'));
     }
