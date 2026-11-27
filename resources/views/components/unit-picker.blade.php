@@ -30,12 +30,27 @@
             return words.length ? this.items.filter((i) => words.every((w) => i.search.includes(w))) : this.items;
         },
         toggle() { this.open ? this.close() : this.show() },
-        show() {
-            // Fixed to the viewport, so a dialog's overflow can't clip it.
+        // Fixed to the viewport, so a dialog's overflow can't clip it. Kept in
+        // place on scroll/resize instead of closing: on phones, focusing the
+        // search box opens the keyboard, which resizes and scrolls the page.
+        place() {
             const r = this.$refs.trigger.getBoundingClientRect();
-            const below = window.innerHeight - r.bottom >= 340 || r.top < 340;
+            const vh = window.visualViewport?.height ?? window.innerHeight;
+            const roomBelow = vh - r.bottom - 12;
+            const roomAbove = r.top - 12;
+            // Below when there's enough room, otherwise whichever side has more.
+            const below = roomBelow >= 220 || roomBelow >= roomAbove;
+            const room = Math.max(120, below ? roomBelow : roomAbove);
             const y = below ? `top:${r.bottom + 4}px` : `bottom:${window.innerHeight - r.top + 4}px`;
-            this.style = `${y};left:${r.left}px;width:${r.width}px`;
+            this.style = `${y};left:${r.left}px;width:${r.width}px;max-height:${room}px`;
+        },
+        show() {
+            // Phones: bring the field near the top first, so the list (and the
+            // keyboard that comes with the search box) fit underneath it.
+            if (window.innerWidth < 640) {
+                window.scrollBy({ top: this.$refs.trigger.getBoundingClientRect().top - 80, behavior: 'instant' });
+            }
+            this.place();
             this.open = true;
             this.query = '';
             this.active = Math.max(0, this.filtered.findIndex((i) => i.key === this.selected));
@@ -51,7 +66,8 @@
         scrollActive() { this.$refs.list?.querySelector('[data-active=true]')?.scrollIntoView({ block: 'nearest' }) },
      }"
      x-on:click.outside="if (!$refs.panel?.contains($event.target)) close()"
-     x-on:resize.window="close()" x-on:scroll.window="close()"
+     x-on:resize.window="open && place()" x-on:scroll.window="open && place()"
+     x-init="window.visualViewport?.addEventListener('resize', () => open && place())"
      {{ $attributes->merge(['class' => 'relative min-w-0']) }}>
     <input type="hidden" name="id_unit" x-bind:value="current ? current.unit : ''">
     <input type="hidden" name="id_sub_unit" x-bind:value="current && current.sub ? current.sub : ''">
@@ -70,7 +86,7 @@
 
     <div x-show="open" x-cloak x-ref="panel" x-bind:style="style" x-transition.opacity.duration.100ms
          x-on:keydown.escape.prevent.stop="close(); $refs.trigger.focus()"
-         class="bg-popover text-popover-foreground fixed z-[60] overflow-hidden rounded-md border shadow-md">
+         class="bg-popover text-popover-foreground fixed z-[60] flex flex-col overflow-hidden rounded-md border shadow-md">
         <div class="border-b p-2">
             <div class="relative">
                 <x-ui.icon name="search" class="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
@@ -81,7 +97,7 @@
                        class="border-input h-9 w-full rounded-md border bg-transparent pr-3 pl-8 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50">
             </div>
         </div>
-        <ul x-ref="list" role="listbox" class="max-h-72 overflow-y-auto overscroll-contain p-1">
+        <ul x-ref="list" role="listbox" class="max-h-72 min-h-0 flex-1 overflow-y-auto overscroll-contain p-1">
             <template x-for="(item, index) in filtered" x-bind:key="item.key">
                 <li role="option" x-bind:aria-selected="item.key === selected" x-bind:data-active="index === active"
                     x-on:click="choose(item)" x-on:mousemove="active = index"
