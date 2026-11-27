@@ -20,7 +20,15 @@
                         <x-ui.input type="email" id="email" name="email" :value="old('email')" :invalid="$errors->has('email')" placeholder="nama@email.com" autocomplete="email" autofocus required />
                     </x-ui.field>
                     <x-ui.field label="Password" for="password" name="password">
-                        <x-ui.input type="password" id="password" name="password" :invalid="$errors->has('password')" autocomplete="current-password" required />
+                        <div class="relative" x-data="{ show: false }">
+                            <x-ui.input x-bind:type="show ? 'text' : 'password'" type="password" id="password" name="password" :value="old('password')" :invalid="$errors->has('password')" autocomplete="current-password" class="pr-10" required />
+                            <button type="button" x-on:click="show = !show; $nextTick(() => document.getElementById('password').focus())"
+                                    x-bind:aria-label="show ? 'Sembunyikan password' : 'Tampilkan password'" x-bind:aria-pressed="show"
+                                    class="text-muted-foreground hover:text-foreground absolute inset-y-0 right-0 flex w-10 cursor-pointer items-center justify-center">
+                                <span x-show="!show" class="contents"><x-ui.icon name="eye" /></span>
+                                <span x-show="show" x-cloak class="contents"><x-ui.icon name="eye-off" /></span>
+                            </button>
+                        </div>
                     </x-ui.field>
                     @foreach (['recaptcha', 'throttle', 'failed'] as $key)
                         @error($key)

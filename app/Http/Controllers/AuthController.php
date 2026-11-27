@@ -6,6 +6,7 @@ use App\Rules\Recaptcha;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -27,12 +28,19 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
+        // Validated by hand so a failure (e.g. reCAPTCHA) still sends the
+        // typed email and password back to the form.
+        $validator = Validator::make($request->all(), [
             'email' => ['required', 'email'],
             'password' => ['required'],
             'recaptcha' => [new Recaptcha('login')],
         ]);
-        unset($credentials['recaptcha']);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput($request->only('email', 'password'));
+        }
+
+        $credentials = $request->only('email', 'password');
 
         // Save email to cookie regardless of login result
         cookie()->queue('remember_email', $request->email, 60 * 24 * 30); // 30 days
@@ -43,12 +51,9 @@ class AuthController extends Controller
             return redirect()->intended('/dashboard');
         }
 
-        // Flash the email to session for old() helper
-        $request->flash();
-
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
-        ])->withInput($request->only('email'));
+        ])->withInput($request->only('email', 'password'));
     }
 
     public function logout(Request $request)

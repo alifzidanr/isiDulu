@@ -76,4 +76,17 @@ class LoginRecaptchaTest extends TestCase
         $this->assertAuthenticated();
         Http::assertNothingSent();
     }
+
+    public function test_a_refused_login_keeps_the_typed_email_and_password(): void
+    {
+        $this->google(['success' => true, 'action' => 'login', 'score' => 0.9]);
+        $this->post('/login', ['email' => 'ani@x.id', 'password' => 'salah', 'recaptcha' => 'tok'])
+            ->assertSessionHasInput('email', 'ani@x.id')
+            ->assertSessionHasInput('password', 'salah');
+
+        $this->post('/login', ['email' => 'ani@x.id', 'password' => 'salah'])
+            ->assertSessionHasErrors('recaptcha')
+            ->assertSessionHasInput('password', 'salah');
+        $this->assertGuest();
+    }
 }
