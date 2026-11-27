@@ -6,9 +6,9 @@
 </head>
 <body class="bg-muted/40 print:bg-white">
     @php
+        // The petugas is whoever wrote the laporan (id_user is only a default PIC).
+        $petugas = $permohonan->laporan?->creator?->nama_lengkap ?? '-';
         $informasi = [
-            // The petugas is whoever wrote the laporan (id_user is only a default PIC).
-            'Nama Petugas' => $permohonan->laporan?->creator?->nama_lengkap ?? '-',
             'Tanggal Permohonan' => $permohonan->tanggal->translatedFormat('d F Y'),
             'Nama' => $permohonan->nama_pemohon,
             'Kampus' => $permohonan->unit->kampus->nama_kampus ?? '-',
@@ -36,6 +36,14 @@
                         </div>
                     </div>
                     <x-status-badge :status="$permohonan->status_permohonan" />
+                </div>
+
+                <div class="grid gap-3">
+                    <h2 class="text-sm font-semibold">Informasi Petugas</h2>
+                    <dl class="grid gap-0.5">
+                        <dt class="text-muted-foreground text-xs">Nama Petugas</dt>
+                        <dd class="text-sm">{{ $petugas }}</dd>
+                    </dl>
                 </div>
 
                 <div class="grid gap-3">
