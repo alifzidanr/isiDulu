@@ -4,6 +4,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Models\Kampus;
 use App\Models\Unit;
 use App\Models\SubUnit;
@@ -130,11 +131,12 @@ class MasterDataController extends Controller
     // USER METHODS
     public function userIndex()
     {
-        $users = User::with(['kampus', 'unit'])->orderBy('nama_lengkap')->paginate(10);
+        $users = User::with(['kampus', 'unit', 'subUnit'])->orderBy('nama_lengkap')->paginate(10);
         $kampuses = Kampus::all();
         $units = Unit::all();
+        $subUnits = SubUnit::orderBy('nama_sub_unit')->get(['id_sub_unit', 'nama_sub_unit', 'id_unit']);
         $pegawaiKehadiran = \App\Models\KehadiranPegawai::orderBy('nama_lengkap')->get();
-        return view('master.user.index', compact('users', 'kampuses', 'units', 'pegawaiKehadiran'));
+        return view('master.user.index', compact('users', 'kampuses', 'units', 'subUnits', 'pegawaiKehadiran'));
     }
 
     public function userStore(Request $request)
@@ -146,6 +148,8 @@ class MasterDataController extends Controller
             'password' => 'required|string|min:6',
             'id_kampus' => 'nullable|exists:kampus,id_kampus',
             'id_unit' => 'nullable|exists:unit,id_unit',
+            // A sub unit must belong to the chosen unit.
+            'id_sub_unit' => ['nullable', 'integer', Rule::exists('sub_unit', 'id_sub_unit')->where('id_unit', $request->input('id_unit'))],
             'access_level' => 'required|integer|in:0,1,2',
             'id_pegawai_kehadiran' => 'nullable|integer|exists:kehadiran_pegawai,id_pegawai|unique:user,id_pegawai_kehadiran',
         ]);
@@ -168,6 +172,8 @@ class MasterDataController extends Controller
             'telegram_id' => 'nullable|string|max:100|unique:user,telegram_id,' . $id . ',id_user',
             'id_kampus' => 'nullable|exists:kampus,id_kampus',
             'id_unit' => 'nullable|exists:unit,id_unit',
+            // A sub unit must belong to the chosen unit.
+            'id_sub_unit' => ['nullable', 'integer', Rule::exists('sub_unit', 'id_sub_unit')->where('id_unit', $request->input('id_unit'))],
             'access_level' => 'required|integer|in:0,1,2',
             'id_pegawai_kehadiran' => 'nullable|integer|exists:kehadiran_pegawai,id_pegawai|unique:user,id_pegawai_kehadiran,' . $id . ',id_user',
         ]);

@@ -38,6 +38,10 @@
                     <dt class="text-muted-foreground text-sm">Unit</dt>
                     <dd class="text-sm font-medium">{{ $user->unit->nama_unit ?? '—' }}</dd>
                 </div>
+                <div class="grid gap-1">
+                    <dt class="text-muted-foreground text-sm">Sub Unit</dt>
+                    <dd class="text-sm font-medium">{{ $user->subUnit->nama_sub_unit ?? '—' }}</dd>
+                </div>
             </dl>
         </x-ui.card.content>
     </x-ui.card>

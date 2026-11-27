@@ -53,7 +53,7 @@
                         <x-ui.table.cell>
                             <div class="grid">
                                 <span>{{ $user->kampus->nama_kampus ?? '—' }}</span>
-                                @if ($user->unit)<span class="text-muted-foreground text-xs">{{ $user->unit->nama_unit }}</span>@endif
+                                @if ($user->unit)<span class="text-muted-foreground text-xs">{{ $user->unit->nama_unit }}@if ($user->subUnit) &rsaquo; {{ $user->subUnit->nama_sub_unit }}@endif</span>@endif
                             </div>
                         </x-ui.table.cell>
                         <x-ui.table.cell class="text-right">
@@ -65,6 +65,7 @@
                                     'telegram_id' => $user->telegram_id,
                                     'id_kampus' => $user->id_kampus,
                                     'id_unit' => $user->id_unit,
+                                    'id_sub_unit' => $user->id_sub_unit,
                                     'access_level' => $user->access_level,
                                     'id_pegawai_kehadiran' => $user->id_pegawai_kehadiran,
                                 ]"
@@ -115,6 +116,17 @@
                 </x-ui.field>
                 <x-ui.field label="Unit" for="{{ $mode }}_unit" name="id_unit" :form="$mode">
                     <x-ui.select id="{{ $mode }}_unit" name="id_unit" x-model="{{ $model }}.id_unit" placeholder="Pilih unit" :options="$unitOptions" />
+                </x-ui.field>
+                {{-- Only the chosen unit's sub units; cleared when the unit changes. --}}
+                <x-ui.field label="Sub Unit" for="{{ $mode }}_sub_unit" name="id_sub_unit" :form="$mode"
+                            x-data="{ subUnits: {{ Js::from($subUnits) }} }"
+                            x-effect="if ({{ $model }}.id_sub_unit && !subUnits.some(s => String(s.id_sub_unit) === String({{ $model }}.id_sub_unit) && String(s.id_unit) === String({{ $model }}.id_unit))) {{ $model }}.id_sub_unit = ''">
+                    <x-ui.select id="{{ $mode }}_sub_unit" name="id_sub_unit" x-model="{{ $model }}.id_sub_unit"
+                                 x-bind:disabled="!{{ $model }}.id_unit" placeholder="Pilih sub unit">
+                        <template x-for="s in subUnits.filter(s => String(s.id_unit) === String({{ $model }}.id_unit))" x-bind:key="s.id_sub_unit">
+                            <option x-bind:value="s.id_sub_unit" x-text="s.nama_sub_unit" x-bind:selected="String(s.id_sub_unit) === String({{ $model }}.id_sub_unit)"></option>
+                        </template>
+                    </x-ui.select>
                 </x-ui.field>
                 <x-ui.field label="Pegawai Kehadiran" for="{{ $mode }}_pegawai" name="id_pegawai_kehadiran" :form="$mode" class="sm:col-span-2"
                             hint="Untuk masuk dengan fingerprint/Face ID dari Kehadiran. Hanya pegawai Direktorat TI dan TD.">

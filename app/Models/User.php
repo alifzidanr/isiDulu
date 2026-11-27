@@ -20,6 +20,7 @@ class User extends Authenticatable
         'password',
         'id_kampus',
         'id_unit',
+        'id_sub_unit',
         'access_level',
     ];
 
@@ -32,6 +33,11 @@ class User extends Authenticatable
     public function kehadiranPegawai()
     {
         return $this->belongsTo(KehadiranPegawai::class, 'id_pegawai_kehadiran', 'id_pegawai');
+    }
+
+    public function subUnit()
+    {
+        return $this->belongsTo(SubUnit::class, 'id_sub_unit', 'id_sub_unit');
     }
 
     public function kampus()
