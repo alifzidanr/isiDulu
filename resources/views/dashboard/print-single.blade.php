@@ -7,14 +7,14 @@
 <body class="bg-muted/40 print:bg-white">
     @php
         $informasi = [
+            // The petugas is whoever wrote the laporan (id_user is only a default PIC).
+            'Nama Petugas' => $permohonan->laporan?->creator?->nama_lengkap ?? '-',
             'Tanggal Permohonan' => $permohonan->tanggal->translatedFormat('d F Y'),
             'Nama' => $permohonan->nama_pemohon,
             'Kampus' => $permohonan->unit->kampus->nama_kampus ?? '-',
             'Unit' => $permohonan->unit->nama_unit ?? '-',
             'Sub Unit' => $permohonan->subUnit->nama_sub_unit ?? '-',
             'Status Inventaris' => $permohonan->inventaris === 'y' ? 'Inventaris' : 'Non-Inventaris',
-            // The petugas is whoever wrote the laporan (id_user is only a default PIC).
-            'Nama Petugas' => $permohonan->laporan?->creator?->nama_lengkap ?? '-',
         ];
         $ttd = \App\Support\Penandatangan::current();
     @endphp
