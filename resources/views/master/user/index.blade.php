@@ -6,14 +6,13 @@
 @php
     $kampusOptions = $kampuses->pluck('nama_kampus', 'id_kampus');
     $unitOptions = $units->pluck('nama_unit', 'id_unit');
-    $statusOptions = ['active' => 'Active', 'inactive' => 'Inactive'];
     $levelOptions = [0 => 'Superadmin', 1 => 'Admin', 2 => 'User'];
     $pegawaiOptions = $pegawaiKehadiran->mapWithKeys(fn ($p) => [$p->id_pegawai => $p->nama_lengkap . ($p->nip ? ' — ' . $p->nip : '')]);
 @endphp
 
 @section('content')
 <div class="grid gap-6"
-     x-data="crud({ updateUrl: @js(route('master.user.update', '__ID__')), defaults: { status: 'active', access_level: '2' }, reopen: @js(old('_form')), old: @js(session()->getOldInput()) })">
+     x-data="crud({ updateUrl: @js(route('master.user.update', '__ID__')), defaults: { access_level: '2' }, reopen: @js(old('_form')), old: @js(session()->getOldInput()) })">
 
     <x-ui.page-header title="User" description="Akun yang bisa masuk ke panel HelpDesk.">
         <x-slot:actions>
@@ -26,7 +25,6 @@
             <x-ui.table.header>
                 <x-ui.table.head>Nama</x-ui.table.head>
                 <x-ui.table.head>Telegram ID</x-ui.table.head>
-                <x-ui.table.head>Status</x-ui.table.head>
                 <x-ui.table.head>Akses</x-ui.table.head>
                 <x-ui.table.head>Kampus / Unit</x-ui.table.head>
                 <x-ui.table.head class="w-16 text-right"><span class="sr-only">Aksi</span></x-ui.table.head>
@@ -48,9 +46,6 @@
                         </x-ui.table.cell>
                         <x-ui.table.cell class="font-mono text-xs">{{ $user->telegram_id ?: '—' }}</x-ui.table.cell>
                         <x-ui.table.cell>
-                            <x-ui.badge :variant="$user->status === 'active' ? 'success' : 'muted'">{{ ucfirst($user->status) }}</x-ui.badge>
-                        </x-ui.table.cell>
-                        <x-ui.table.cell>
                             <x-ui.badge :variant="$user->access_level == 0 ? 'default' : ($user->access_level == 1 ? 'info' : 'outline')">
                                 {{ $levelOptions[$user->access_level] ?? 'User' }}
                             </x-ui.badge>
@@ -68,7 +63,6 @@
                                     'nama_lengkap' => $user->nama_lengkap,
                                     'email' => $user->email,
                                     'telegram_id' => $user->telegram_id,
-                                    'status' => $user->status,
                                     'id_kampus' => $user->id_kampus,
                                     'id_unit' => $user->id_unit,
                                     'access_level' => $user->access_level,
@@ -79,7 +73,7 @@
                         </x-ui.table.cell>
                     </x-ui.table.row>
                 @empty
-                    <x-ui.table.empty colspan="6" title="Belum ada user" icon="users" />
+                    <x-ui.table.empty colspan="5" title="Belum ada user" icon="users" />
                 @endforelse
             </x-ui.table.body>
         </x-ui.table>
@@ -112,9 +106,6 @@
                             :hint="$mode === 'edit' ? 'Kosongkan jika tidak ingin mengubah.' : 'Minimal 6 karakter.'">
                     <x-ui.input type="password" id="{{ $mode }}_password" name="password" autocomplete="new-password"
                                 :placeholder="$mode === 'edit' ? 'Password baru' : 'Masukkan password'" :required="$mode === 'create'" />
-                </x-ui.field>
-                <x-ui.field label="Status" for="{{ $mode }}_status" name="status" :form="$mode" required>
-                    <x-ui.select id="{{ $mode }}_status" name="status" x-model="{{ $model }}.status" :options="$statusOptions" required />
                 </x-ui.field>
                 <x-ui.field label="Access Level" for="{{ $mode }}_level" name="access_level" :form="$mode" required>
                     <x-ui.select id="{{ $mode }}_level" name="access_level" x-model="{{ $model }}.access_level" :options="$levelOptions" required />

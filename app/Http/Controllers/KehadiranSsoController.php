@@ -65,12 +65,7 @@ class KehadiranSsoController extends Controller
             return $this->fail('HelpDesk hanya untuk pegawai Direktorat TI & TD.');
         }
 
-        $user = KehadiranAccounts::userFor($pegawai);
-        if ($user->status !== 'active') {
-            return $this->fail('Akun HelpDesk Anda tidak aktif. Hubungi admin.');
-        }
-
-        Auth::login($user);
+        Auth::login(KehadiranAccounts::userFor($pegawai));
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard'))->with('success', 'Berhasil masuk lewat Kehadiran.');

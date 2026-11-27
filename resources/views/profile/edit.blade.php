@@ -26,7 +26,6 @@
                     <p class="truncate font-medium">{{ $user->nama_lengkap }}</p>
                     <div class="flex flex-wrap items-center gap-1.5">
                         <x-ui.badge variant="info">{{ $roles[$user->access_level] ?? 'User' }}</x-ui.badge>
-                        <x-ui.badge :variant="$user->status === 'active' ? 'success' : 'muted'">{{ ucfirst($user->status ?? 'active') }}</x-ui.badge>
                     </div>
                 </div>
             </div>

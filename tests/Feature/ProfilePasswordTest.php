@@ -67,12 +67,4 @@ class ProfilePasswordTest extends TestCase
 
         $this->assertTrue(Hash::check('baru-sekali', $this->user->fresh()->password));
     }
-
-    public function test_inactive_account_cannot_sign_in_with_a_password(): void
-    {
-        $this->user->forceFill(['status' => 'inactive'])->save();
-
-        $this->post('/login', ['email' => 'ani@example.com', 'password' => 'lama-sekali'])->assertSessionHasErrors('email');
-        $this->assertGuest();
-    }
 }

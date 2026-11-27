@@ -34,13 +34,7 @@ class PasskeyController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
-        $user = KehadiranAccounts::userFor($passkey->pegawai);
-
-        if ($user->status !== 'active') {
-            return response()->json(['message' => 'Akun HelpDesk Anda tidak aktif. Hubungi admin.'], 403);
-        }
-
-        Auth::login($user);
+        Auth::login(KehadiranAccounts::userFor($passkey->pegawai));
         $request->session()->regenerate();
 
         return response()->json(['redirect' => redirect()->intended(route('dashboard'))->getTargetUrl()]);

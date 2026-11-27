@@ -45,8 +45,7 @@ class AuthController extends Controller
         // Save email to cookie regardless of login result
         cookie()->queue('remember_email', $request->email, 60 * 24 * 30); // 30 days
 
-        // Accounts set to inactive in Master User can't sign in.
-        if (Auth::attemptWhen($credentials, fn ($user) => $user->status !== 'inactive')) {
+        if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             return redirect()->intended('/dashboard');
         }

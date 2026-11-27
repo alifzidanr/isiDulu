@@ -118,17 +118,6 @@ class KehadiranPasskeyTest extends TestCase
         $this->assertSame([Base64UrlSafe::encodeUnpadded($this->credentialId)], array_column($options['allowCredentials'], 'id'));
     }
 
-    public function test_inactive_account_cannot_sign_in(): void
-    {
-        $this->push([$this->pegawai(10, 'Ani', 'ani@al-azhar.or.id')]);
-        $this->postJson('/passkey/login', ['credential' => $this->assertion()])->assertOk();
-        auth()->logout();
-        User::query()->update(['status' => 'inactive']);
-
-        $this->postJson('/passkey/login', ['credential' => $this->assertion(counter: 2)])->assertForbidden();
-        $this->assertGuest();
-    }
-
     private function pegawai(int $id, string $nama, ?string $email, ?array $passkeys = null): array
     {
         return [

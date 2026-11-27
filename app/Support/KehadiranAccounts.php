@@ -47,7 +47,6 @@ class KehadiranAccounts
             'nama_lengkap' => $pegawai->nama_lengkap,
             'email' => $email,
             'password' => Hash::make(self::INITIAL_PASSWORD),
-            'status' => 'active',
             'access_level' => 2,
             'id_unit' => $unit?->id_unit,
             'id_kampus' => $unit?->id_kampus ?? Kampus::orderBy('id_kampus')->value('id_kampus'),

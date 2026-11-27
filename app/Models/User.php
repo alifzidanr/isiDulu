@@ -18,7 +18,6 @@ class User extends Authenticatable
         'email',
         'telegram_id',
         'password',
-        'status',
         'id_kampus',
         'id_unit',
         'access_level',
