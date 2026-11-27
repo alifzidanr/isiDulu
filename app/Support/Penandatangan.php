@@ -49,9 +49,8 @@ class Penandatangan
             return false;
         }
 
-        Storage::put(self::IMAGE, $png);
-
-        return true;
+        // put() returns false (not an exception) when the file can't be written.
+        return Storage::put(self::IMAGE, $png) === true;
     }
 
     /**
