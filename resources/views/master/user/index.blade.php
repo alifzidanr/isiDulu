@@ -21,19 +21,23 @@
     </x-ui.page-header>
 
     <x-ui.card flush>
-        {{-- Search by name or email (?q=); keeps the chosen rows per page. --}}
-        <form method="GET" action="{{ route('master.user.index') }}" role="search" class="flex items-center gap-2 border-b p-3 sm:p-4"
-              x-data x-on:search="if (!$event.target.value) $el.submit()">
+        {{-- Search by name or email as you type (?q=, see resources/js/live-search.js);
+             keeps the chosen rows per page. --}}
+        <form method="GET" action="{{ route('master.user.index') }}" role="search" class="border-b p-3 sm:p-4"
+              x-data="liveSearch({ target: '#user-results' })" x-on:submit.prevent="run()">
             @if (request()->filled('per_page'))<input type="hidden" name="per_page" value="{{ request('per_page') }}">@endif
             <div class="relative w-full sm:max-w-xs">
-                <x-ui.icon name="search" class="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
-                <x-ui.input type="search" name="q" :value="$search" placeholder="Cari nama atau email…" aria-label="Cari user" class="pl-8" autocomplete="off" />
+                <span x-show="!busy" class="contents"><x-ui.icon name="search" class="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" /></span>
+                <span x-show="busy" x-cloak class="contents"><x-ui.icon name="loader-circle" class="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 animate-spin" /></span>
+                <x-ui.input type="text" name="q" :value="$search" x-ref="input" x-model="q" x-on:input="schedule()"
+                            placeholder="Cari nama atau email…" aria-label="Cari user" class="pr-8 pl-8" autocomplete="off" />
+                <button type="button" x-show="q" x-cloak x-on:click="clear()" aria-label="Hapus pencarian"
+                        class="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer rounded-sm p-0.5">
+                    <x-ui.icon name="x" class="size-4" />
+                </button>
             </div>
-            <x-ui.button type="submit" variant="outline">Cari</x-ui.button>
-            @if ($search !== '')
-                <x-ui.button variant="ghost" :href="route('master.user.index', request()->filled('per_page') ? ['per_page' => request('per_page')] : [])">Reset</x-ui.button>
-            @endif
         </form>
+        <div id="user-results">
         <x-ui.table>
             <x-ui.table.header>
                 <x-ui.table.head>Nama</x-ui.table.head>
@@ -101,6 +105,7 @@
         @if ($users->total() > 0)
             <div class="border-t px-6 py-4">{{ $users->links() }}</div>
         @endif
+        </div>
     </x-ui.card>
 
     @foreach (['create' => ['createOpen', 'form', 'Tambah User', 'Simpan'], 'edit' => ['editOpen', 'editing', 'Edit User', 'Simpan Perubahan']] as $mode => [$open, $model, $heading, $submit])
