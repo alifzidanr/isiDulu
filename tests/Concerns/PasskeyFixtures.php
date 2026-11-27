@@ -42,7 +42,7 @@ trait PasskeyFixtures
         });
         Schema::create('user', function (Blueprint $t) {
             $t->increments('id_user');
-            $t->integer('id_kampus');
+            $t->integer('id_kampus')->nullable();
             $t->integer('id_unit')->nullable();
             $t->integer('access_level');
             $t->string('nama_lengkap');

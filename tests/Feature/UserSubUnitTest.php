@@ -144,4 +144,31 @@ class UserSubUnitTest extends TestCase
         $this->actingAs($this->admin)->delete(route('master.user.destroy', $budi->id_user), ['confirm_name' => 'Budi Santoso']);
         $this->assertNull($budi->fresh());
     }
+
+    public function test_a_user_can_be_saved_without_kampus_or_unit(): void
+    {
+        $budi = User::forceCreate(['id_kampus' => 1, 'id_unit' => 4, 'access_level' => 2, 'nama_lengkap' => 'Budi', 'email' => 'budi@x.id', 'password' => 'x']);
+
+        $this->actingAs($this->admin)->put(route('master.user.update', $budi->id_user), [
+            'nama_lengkap' => 'Budi', 'email' => 'budi@x.id', 'access_level' => 2,
+            'id_kampus' => null, 'id_unit' => null, 'id_sub_unit' => null,
+        ])->assertSessionHasNoErrors();
+
+        $budi->refresh();
+        $this->assertNull($budi->id_kampus);
+        $this->assertTrue($budi->isReadOnly());
+    }
+
+    public function test_read_only_accounts_cannot_create_or_change_permohonan(): void
+    {
+        $viewer = User::forceCreate(['id_kampus' => null, 'id_unit' => null, 'access_level' => 2, 'nama_lengkap' => 'Viewer', 'email' => 'viewer@x.id', 'password' => 'x']);
+
+        $this->actingAs($viewer)->post(route('permohonan.store'), [])->assertForbidden();
+        $this->actingAs($viewer)->patch(route('permohonan.status', 1), ['status' => 1])->assertForbidden();
+        $this->actingAs($viewer)->post(route('permohonan.laporan.store', 1), [])->assertForbidden();
+
+        // A superadmin without kampus/unit isn't read-only.
+        $this->assertFalse(User::forceCreate(['id_kampus' => null, 'access_level' => 0, 'nama_lengkap' => 'Root', 'email' => 'root@x.id', 'password' => 'x'])->isReadOnly());
+        $this->assertFalse($this->admin->fresh()->isReadOnly());
+    }
 }

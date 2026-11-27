@@ -73,4 +73,19 @@ class User extends Authenticatable
     {
         return $this->access_level === 2;
     }
+
+    /** No kampus and no unit assigned. */
+    public function hasNoPlacement(): bool
+    {
+        return $this->id_kampus === null && $this->id_unit === null;
+    }
+
+    /**
+     * Without a kampus or unit, an account (other than a superadmin) can see
+     * every permohonan but not create, update or report on them.
+     */
+    public function isReadOnly(): bool
+    {
+        return ! $this->isSuperAdmin() && $this->hasNoPlacement();
+    }
 }

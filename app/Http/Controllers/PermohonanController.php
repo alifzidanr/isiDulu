@@ -25,7 +25,8 @@ class PermohonanController extends Controller
         $user = Auth::user();
         $query = Permohonan::with(['unit', 'subUnit', 'laporan']);
 
-        if ($user->isUser()) {
+        // Users see their kampus; read-only accounts (no kampus/unit) see all.
+        if ($user->isUser() && ! $user->hasNoPlacement()) {
             $unitIds = Unit::where('id_kampus', $user->id_kampus)->pluck('id_unit');
             $query->whereIn('id_unit', $unitIds);
         }
@@ -37,7 +38,10 @@ class PermohonanController extends Controller
         $jenisPerawatans = JenisPerawatan::orderBy('nama_perawatan')->get();
         $detailPerawatans = DetailPerawatan::orderBy('nama_detail_perawatan')->get();
 
+        $readOnly = $user->isReadOnly();
+
         return view('dashboard.permohonan', compact(
+            'readOnly',
             'permohonans', 
             'units', 
             'jenisPerangkats', 
@@ -48,6 +52,8 @@ class PermohonanController extends Controller
 
     public function store(Request $request)
     {
+        $this->abortIfReadOnly();
+
         $validated = $request->validate([
             'nama_pemohon' => 'required|string|max:255',
             'email_pemohon' => 'nullable|email|max:255',
@@ -74,6 +80,8 @@ class PermohonanController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
+        $this->abortIfReadOnly();
+
         $request->validate([
             'status' => 'required|integer|in:1,2,4,5'
         ]);
@@ -96,6 +104,8 @@ class PermohonanController extends Controller
 
     public function storeLaporan(Request $request, $id)
     {
+        $this->abortIfReadOnly();
+
         $permohonan = Permohonan::findOrFail($id);
         
         if ($permohonan->status_permohonan != 2) {
@@ -146,7 +156,8 @@ class PermohonanController extends Controller
         $query = Permohonan::with(['unit', 'subUnit'])
             ->where('status_permohonan', 4);
 
-        if ($user->isUser()) {
+        // Users see their kampus; read-only accounts (no kampus/unit) see all.
+        if ($user->isUser() && ! $user->hasNoPlacement()) {
             $unitIds = Unit::where('id_kampus', $user->id_kampus)->pluck('id_unit');
             $query->whereIn('id_unit', $unitIds);
         }
@@ -160,6 +171,11 @@ class PermohonanController extends Controller
     {
         $permohonan = Permohonan::with(['unit', 'subUnit'])->findOrFail($id);
         return view('dashboard.print-single', compact('permohonan'));
+    }
+
+    private function abortIfReadOnly(): void
+    {
+        abort_if(Auth::user()?->isReadOnly(), 403, 'Akun Anda belum punya kampus/unit, jadi hanya bisa melihat permohonan.');
     }
 
     /**

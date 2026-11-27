@@ -40,9 +40,18 @@
 
     <x-ui.page-header title="Permohonan" description="Kelola permohonan layanan yang masuk.">
         <x-slot:actions>
-            <x-ui.button icon="plus" x-on:click="createOpen = true">Buat Permohonan</x-ui.button>
+            @unless ($readOnly)
+                <x-ui.button icon="plus" x-on:click="createOpen = true">Buat Permohonan</x-ui.button>
+            @endunless
         </x-slot:actions>
     </x-ui.page-header>
+
+    @if ($readOnly)
+        <x-ui.alert icon="eye">
+            Akun Anda belum punya kampus dan unit, jadi Anda bisa melihat semua permohonan tetapi tidak bisa membuat atau mengubahnya.
+            Hubungi superadmin untuk mengatur kampus/unit Anda.
+        </x-ui.alert>
+    @endif
 
     {{-- One shared form for status changes; setStatus() fills in the URL and value. --}}
     <form x-ref="statusForm" method="POST" class="hidden">
@@ -91,7 +100,7 @@
                             @endif
                         </x-ui.table.cell>
                         <x-ui.table.cell class="text-right">
-                            @if (in_array($permohonan->status_permohonan, [3, 5]))
+                            @if ($readOnly || in_array($permohonan->status_permohonan, [3, 5]))
                                 <span class="text-muted-foreground text-xs">—</span>
                             @else
                                 @php $statusUrl = route('permohonan.status', $permohonan->id_permohonan); @endphp

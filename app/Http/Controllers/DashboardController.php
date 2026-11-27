@@ -18,7 +18,10 @@ class DashboardController extends Controller
         // Statistics based on user access level
         $stats = [];
         
-        if ($user->isSuperAdmin()) {
+        // Superadmins and read-only accounts (no kampus/unit) see everything.
+        $seesAll = $user->isSuperAdmin() || $user->hasNoPlacement();
+
+        if ($seesAll) {
             $stats = [
                 'total_permohonan' => Permohonan::count(),
                 'permohonan_pending' => Permohonan::where('status_permohonan', 0)->count(),
@@ -43,7 +46,7 @@ class DashboardController extends Controller
 
         // Chart data for status distribution
         $statusData = Permohonan::select('status_permohonan', DB::raw('count(*) as count'))
-            ->when(!$user->isSuperAdmin(), function ($query) use ($user) {
+            ->when(! $seesAll, function ($query) use ($user) {
                 $unitIds = Unit::where('id_kampus', $user->id_kampus)->pluck('id_unit');
                 return $query->whereIn('id_unit', $unitIds);
             })
@@ -51,7 +54,7 @@ class DashboardController extends Controller
             ->get();
 
         $recent = Permohonan::with('unit')
-            ->when(!$user->isSuperAdmin(), function ($query) use ($user) {
+            ->when(! $seesAll, function ($query) use ($user) {
                 return $query->whereIn('id_unit', Unit::where('id_kampus', $user->id_kampus)->pluck('id_unit'));
             })
             ->orderByDesc('id_permohonan')
