@@ -36,7 +36,10 @@ class NewPermohonanNotification extends Notification
         $message .= "🏢 Unit: {$this->md($this->permohonan->unit?->nama_unit)}\n";
         $message .= "📞 Kontak: {$this->md($this->permohonan->kontak_pemohon)}\n";
         $message .= "📝 Keluhan: {$this->md($keluhan)}\n";
-        $message .= "📅 Tanggal: {$this->permohonan->tanggal->format('d/m/Y H:i')}\n";
+        // tanggal is a DATE column (no time, so it always read 00:00);
+        // created_at holds when the request actually came in.
+        $masuk = $this->permohonan->created_at ?? now();
+        $message .= "📅 Tanggal: {$masuk->format('d/m/Y H:i')}\n";
 
         return TelegramMessage::create()
             ->content($message)

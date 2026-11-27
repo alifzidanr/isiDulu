@@ -38,13 +38,7 @@
                     <x-status-badge :status="$permohonan->status_permohonan" />
                 </div>
 
-                <div class="grid gap-3">
-                    <h2 class="text-sm font-semibold">Informasi Petugas</h2>
-                    <dl class="grid gap-0.5">
-                        <dt class="text-muted-foreground text-xs">Nama Petugas</dt>
-                        <dd class="text-sm">{{ $petugas }}</dd>
-                    </dl>
-                </div>
+                <p class="text-sm"><span class="font-semibold">Petugas:</span> {{ $petugas }}</p>
 
                 <div class="grid gap-3">
                     <h2 class="text-sm font-semibold">Informasi Pemohon</h2>

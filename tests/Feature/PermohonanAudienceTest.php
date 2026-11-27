@@ -193,6 +193,15 @@ class PermohonanAudienceTest extends TestCase
         $this->assertStringContainsString('\\[ini](http://evil.example) \\*penting\\*', $text);
     }
 
+    public function test_telegram_shows_the_time_the_request_came_in(): void
+    {
+        DB::table('permohonan')->where('id_permohonan', 1)->update(['tanggal' => '2026-11-27', 'created_at' => '2026-11-27 15:55:00']);
+
+        $text = (new NewPermohonanNotification(Permohonan::find(1)))->toTelegram(null)->toArray()['text'];
+
+        $this->assertStringContainsString('27/11/2026 15:55', $text);
+    }
+
     public function test_pages_send_security_headers(): void
     {
         $this->get(route('login'))
