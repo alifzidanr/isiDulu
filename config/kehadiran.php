@@ -1,17 +1,17 @@
 <?php
 
 /*
- * Passkey login with credentials registered in Kehadiran (presensiAppYPIA).
- *
- * Those passkeys belong to Kehadiran's relying party (its host). Browsers let
- * this site use them because Kehadiran lists this origin at
- * https://<rp_id>/.well-known/webauthn (WebAuthn Related Origin Requests;
- * Chrome, Edge and Safari, not Firefox yet).
+ * Passkey login with the YPIA-wide passkeys. Kehadiran and HRIS register
+ * them for the parent domain al-azhar.id in one shared `passkeys` table, so
+ * any *.al-azhar.id site (this app runs at layanan-ti.al-azhar.id) can use
+ * them directly. Kehadiran pushes the Direktorat TI&TD members' public keys
+ * here (KehadiranSyncController).
  */
 return [
 
-    // Kehadiran's host: the rpId its passkeys were registered for.
-    'rp_id' => env('KEHADIRAN_PASSKEY_RP_ID', 'kehadiran.al-azhar.id'),
+    // The rpId the shared passkeys are registered for (PASSKEYS_RELYING_PARTY_ID
+    // in Kehadiran and HRIS). This app must be served from it or a subdomain.
+    'rp_id' => env('KEHADIRAN_PASSKEY_RP_ID', 'al-azhar.id'),
 
     // Origins of this app that may complete the ceremony. Behind the
     // Cloudflare tunnel the request itself looks like http://, so APP_URL
@@ -22,10 +22,10 @@ return [
         rescue(fn () => request()->getSchemeAndHttpHost(), report: false),
     ]))),
 
-    // Shared with Kehadiran's ISIDULU_SYNC_SECRET; signs roster pushes.
+    // Shared with Kehadiran's ISIDULU_SYNC_SECRET; signs roster pushes and SSO tokens.
     'sync_secret' => env('KEHADIRAN_SYNC_SECRET'),
 
-    // Unit (and its kampus) given to accounts created on first passkey login.
+    // Unit (and its kampus) given to accounts created for roster members.
     'default_unit_id' => env('KEHADIRAN_DEFAULT_UNIT_ID'),
 
     'timeout' => 60000,

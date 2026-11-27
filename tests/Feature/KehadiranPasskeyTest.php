@@ -64,7 +64,7 @@ class KehadiranPasskeyTest extends TestCase
     {
         $this->push([$this->pegawai(10, 'Ani', 'ani@al-azhar.or.id')]);
 
-        $this->postJson('/passkey/kehadiran/login', ['credential' => $this->assertion()])
+        $this->postJson('/passkey/login', ['credential' => $this->assertion()])
             ->assertOk()
             ->assertJsonStructure(['redirect']);
 
@@ -85,7 +85,7 @@ class KehadiranPasskeyTest extends TestCase
         ]);
         $this->push([$this->pegawai(10, 'Ani', 'ani@al-azhar.or.id')]);
 
-        $this->postJson('/passkey/kehadiran/login', ['credential' => $this->assertion()])->assertOk();
+        $this->postJson('/passkey/login', ['credential' => $this->assertion()])->assertOk();
 
         $this->assertSame(1, User::count());
         $this->assertSame(10, (int) User::first()->id_pegawai_kehadiran);
@@ -96,7 +96,7 @@ class KehadiranPasskeyTest extends TestCase
     {
         $this->push([$this->pegawai(11, 'Budi', null, [])]);
 
-        $this->postJson('/passkey/kehadiran/login', ['credential' => $this->assertion()])->assertUnprocessable();
+        $this->postJson('/passkey/login', ['credential' => $this->assertion()])->assertUnprocessable();
         $this->assertGuest();
     }
 
@@ -104,7 +104,7 @@ class KehadiranPasskeyTest extends TestCase
     {
         $this->push([$this->pegawai(10, 'Ani', 'ani@al-azhar.or.id')]);
 
-        $this->postJson('/passkey/kehadiran/login', ['credential' => $this->assertion(origin: 'https://evil.test')])->assertUnprocessable();
+        $this->postJson('/passkey/login', ['credential' => $this->assertion(origin: 'https://evil.test')])->assertUnprocessable();
         $this->assertGuest();
     }
 
@@ -112,7 +112,7 @@ class KehadiranPasskeyTest extends TestCase
     {
         $this->push([$this->pegawai(10, 'Ani', 'ani@al-azhar.or.id')]);
 
-        $options = $this->postJson('/passkey/kehadiran/options')->assertOk()->json();
+        $options = $this->postJson('/passkey/options')->assertOk()->json();
 
         $this->assertSame(self::RP_ID, $options['rpId']);
         $this->assertSame([Base64UrlSafe::encodeUnpadded($this->credentialId)], array_column($options['allowCredentials'], 'id'));
@@ -121,11 +121,11 @@ class KehadiranPasskeyTest extends TestCase
     public function test_inactive_account_cannot_sign_in(): void
     {
         $this->push([$this->pegawai(10, 'Ani', 'ani@al-azhar.or.id')]);
-        $this->postJson('/passkey/kehadiran/login', ['credential' => $this->assertion()])->assertOk();
+        $this->postJson('/passkey/login', ['credential' => $this->assertion()])->assertOk();
         auth()->logout();
         User::query()->update(['status' => 'inactive']);
 
-        $this->postJson('/passkey/kehadiran/login', ['credential' => $this->assertion(counter: 2)])->assertForbidden();
+        $this->postJson('/passkey/login', ['credential' => $this->assertion(counter: 2)])->assertForbidden();
         $this->assertGuest();
     }
 
@@ -167,7 +167,7 @@ class KehadiranPasskeyTest extends TestCase
 
     private function assertion(string $origin = self::ORIGIN, int $counter = 1): string
     {
-        $options = $this->postJson('/passkey/kehadiran/options')->assertOk()->json();
+        $options = $this->postJson('/passkey/options')->assertOk()->json();
 
         return $this->signAssertion($options, self::RP_ID, 'pegawai-10', $origin, $counter);
     }

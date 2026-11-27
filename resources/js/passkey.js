@@ -1,8 +1,5 @@
-// Fingerprint / Face ID. Two kinds of passkeys:
-//  - registered here in Pengaturan Profil (app/Support/Passkeys.php), and
-//  - registered in Kehadiran (app/Support/KehadiranPasskeys.php). Those belong
-//    to Kehadiran's domain; the browser accepts them here because Kehadiran
-//    lists this origin at /.well-known/webauthn (Related Origin Requests).
+// Fingerprint / Face ID with the YPIA-wide passkeys, registered in Kehadiran
+// or HRIS for al-azhar.id (see app/Support/KehadiranPasskeys.php).
 
 const b64urlToBuffer = (value) => {
     const base64 = value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=');
@@ -30,7 +27,7 @@ export const passkeySupported = () => typeof window.PublicKeyCredential === 'fun
 function explain(error) {
     if (error?.name === 'NotAllowedError') return 'Verifikasi dibatalkan atau waktu habis.';
     if (error?.name === 'SecurityError') {
-        return 'Browser ini belum bisa memakai passkey Kehadiran di HelpDesk. Gunakan Chrome, Edge, atau Safari versi terbaru.';
+        return 'Passkey hanya bisa dipakai di alamat layanan-ti.al-azhar.id.';
     }
     return error?.message || 'Verifikasi passkey gagal.';
 }
@@ -60,67 +57,7 @@ async function getAssertion(optionsUrl) {
     });
 }
 
-/** Runs navigator.credentials.create() and returns the new credential as JSON for the server. */
-async function createCredential(optionsUrl) {
-    const options = await post(optionsUrl);
-    const credential = await navigator.credentials.create({
-        publicKey: {
-            ...options,
-            challenge: b64urlToBuffer(options.challenge),
-            user: { ...options.user, id: b64urlToBuffer(options.user.id) },
-            excludeCredentials: (options.excludeCredentials || []).map((c) => ({ ...c, id: b64urlToBuffer(c.id) })),
-        },
-    });
-
-    const r = credential.response;
-    return JSON.stringify({
-        id: credential.id,
-        rawId: bufferToB64url(credential.rawId),
-        type: credential.type,
-        response: {
-            clientDataJSON: bufferToB64url(r.clientDataJSON),
-            attestationObject: bufferToB64url(r.attestationObject),
-            transports: typeof r.getTransports === 'function' ? r.getTransports() : [],
-        },
-    });
-}
-
-/** A readable default name for the passkey, e.g. "Chrome di macOS". */
-function deviceName() {
-    const ua = navigator.userAgent;
-    const os = /Android/.test(ua) ? 'Android'
-        : /iPhone|iPad/.test(ua) ? 'iPhone/iPad'
-        : /Mac OS X/.test(ua) ? 'macOS'
-        : /Windows/.test(ua) ? 'Windows'
-        : /Linux/.test(ua) ? 'Linux' : 'perangkat ini';
-    const browser = /Edg\//.test(ua) ? 'Edge'
-        : /Chrome\//.test(ua) ? 'Chrome'
-        : /Firefox\//.test(ua) ? 'Firefox'
-        : /Safari\//.test(ua) ? 'Safari' : 'Browser';
-    return `${browser} di ${os}`;
-}
-
 export function registerPasskey(Alpine) {
-    // <div x-data="passkeyRegister({ options: '...', store: '...' })">
-    Alpine.data('passkeyRegister', ({ options, store }) => ({
-        supported: passkeySupported(),
-        busy: false,
-        name: deviceName(),
-
-        async run() {
-            if (this.busy) return;
-            this.busy = true;
-            try {
-                const credential = await createCredential(options);
-                await post(store, { credential, name: this.name || deviceName() });
-                window.location.reload();
-            } catch (e) {
-                window.toast.error(e?.name === 'InvalidStateError' ? 'Perangkat ini sudah punya passkey untuk akun Anda.' : explain(e));
-                this.busy = false;
-            }
-        },
-    }));
-
     // <div x-data="passkey({ options: '...', verify: '...', mode: 'login' | 'confirm' })">
     Alpine.data('passkey', ({ options, verify, mode = 'login' }) => ({
         supported: passkeySupported(),

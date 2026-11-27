@@ -54,6 +54,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Old hostnames whose browser visits are redirected to APP_URL (App\Http\Middleware\RedirectLegacyHost).
+    'legacy_hosts' => env('APP_LEGACY_HOSTS'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

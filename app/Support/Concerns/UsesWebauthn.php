@@ -8,7 +8,7 @@ use Webauthn\AttestationStatement\NoneAttestationStatementSupport;
 use Webauthn\CeremonyStep\CeremonyStepManagerFactory;
 use Webauthn\Denormalizer\WebauthnSerializerFactory;
 
-/** webauthn-lib plumbing shared by Passkeys and KehadiranPasskeys. */
+/** webauthn-lib plumbing for KehadiranPasskeys. */
 trait UsesWebauthn
 {
     private ?SerializerInterface $serializer = null;
