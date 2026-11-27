@@ -3,7 +3,6 @@
 @section('title', 'Form Permohonan - HelpDesk')
 
 @php
-    $unitOptions = $units->mapWithKeys(fn ($u) => [$u->id_unit => $u->nama_unit . ' — ' . ($u->kampus->nama_kampus ?? '-')]);
 @endphp
 
 @section('content')
@@ -31,8 +30,8 @@
                 <x-ui.field label="Nama Pimpinan" for="pimpinan_pemohon" name="pimpinan_pemohon" hint="Opsional.">
                     <x-ui.input id="pimpinan_pemohon" name="pimpinan_pemohon" :value="old('pimpinan_pemohon')" :invalid="$errors->has('pimpinan_pemohon')" placeholder="Pimpinan unit" />
                 </x-ui.field>
-                <x-ui.field label="Unit" for="id_unit" name="id_unit" required>
-                    <x-ui.select id="id_unit" name="id_unit" placeholder="Pilih unit" :options="$unitOptions" :selected="old('id_unit')" :invalid="$errors->has('id_unit')" required />
+                <x-ui.field label="Unit / Sub Unit" for="unit-picker" name="id_unit" required>
+                    <x-unit-picker :units="$units" :unit="old('id_unit')" :sub-unit="old('id_sub_unit')" :invalid="$errors->has('id_unit') || $errors->has('id_sub_unit')" />
                 </x-ui.field>
                 <x-ui.field label="Inventaris" for="inventaris" name="inventaris" required>
                     <x-ui.select id="inventaris" name="inventaris" placeholder="Pilih status" :options="['y' => 'Inventaris', 'n' => 'Non-Inventaris']" :selected="old('inventaris')" :invalid="$errors->has('inventaris')" required />

@@ -86,4 +86,21 @@ class UserSubUnitTest extends TestCase
         $this->actingAs($this->admin)->get(route('master.user.index', ['per_page' => 9999]))
             ->assertViewHas('users', fn ($users) => $users->perPage() === 25);
     }
+
+    public function test_public_form_lists_units_and_their_sub_units(): void
+    {
+        $this->get(route('public.form'))
+            ->assertOk()
+            ->assertSee('Cari unit, sub unit atau kampus', false)
+            ->assertSee('Helpdesk')
+            ->assertSee('Payroll');
+    }
+
+    public function test_public_form_refuses_a_sub_unit_of_another_unit(): void
+    {
+        $this->post(route('public.store'), [
+            'nama_pemohon' => 'Ani', 'kontak_pemohon' => '0812', 'id_unit' => 4, 'id_sub_unit' => 2,
+            'inventaris' => 'n', 'keluhan' => 'Printer rusak',
+        ])->assertSessionHasErrors('id_sub_unit');
+    }
 }

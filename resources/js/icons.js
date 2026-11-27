@@ -7,7 +7,7 @@ import {
     ChevronLeft, ChevronRight, ChevronsUpDown, CircleCheck, CircleX, ClipboardList, Clock, Ellipsis,
     ExternalLink, Eye, EyeOff, FilePlus, Fingerprint, KeyRound, ShieldCheck, UserCog, FileText, GitBranch, Headset, Inbox, Info, Laptop, LayoutDashboard,
     ListChecks, LoaderCircle, LogIn, LogOut, Menu, Network, PanelLeft, Pencil, Play,
-    Plus, Printer, Save, Send, StickyNote, Trash2, TriangleAlert, User, Users, Wrench, X,
+    Plus, Printer, Save, Search, Send, StickyNote, Trash2, TriangleAlert, User, Users, Wrench, X,
 } from 'lucide';
 
 const icons = {
@@ -15,7 +15,7 @@ const icons = {
     ChevronLeft, ChevronRight, ChevronsUpDown, CircleCheck, CircleX, ClipboardList, Clock, Ellipsis,
     ExternalLink, Eye, EyeOff, FilePlus, Fingerprint, KeyRound, ShieldCheck, UserCog, FileText, GitBranch, Headset, Inbox, Info, Laptop, LayoutDashboard,
     ListChecks, LoaderCircle, LogIn, LogOut, Menu, Network, PanelLeft, Pencil, Play,
-    Plus, Printer, Save, Send, StickyNote, Trash2, TriangleAlert, User, Users, Wrench, X,
+    Plus, Printer, Save, Search, Send, StickyNote, Trash2, TriangleAlert, User, Users, Wrench, X,
 };
 
 let scheduled = false;

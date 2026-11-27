@@ -4,7 +4,6 @@
 @section('page', 'Permohonan')
 
 @php
-    $unitOptions = $units->mapWithKeys(fn ($u) => [$u->id_unit => $u->nama_unit . ' — ' . ($u->kampus->nama_kampus ?? '-')]);
     $reopen = old('_form');
     $oldIf = fn ($form, $key) => $reopen === $form ? old($key) : null;
     // Actions offered per current status: [new status, menu label, confirm verb, icon]
@@ -145,8 +144,8 @@
             <x-ui.field label="Nama Pimpinan" for="pimpinan_pemohon" name="pimpinan_pemohon" form="create">
                 <x-ui.input id="pimpinan_pemohon" name="pimpinan_pemohon" :value="$oldIf('create', 'pimpinan_pemohon')" placeholder="Pimpinan unit (opsional)" />
             </x-ui.field>
-            <x-ui.field label="Unit" for="id_unit" name="id_unit" form="create" required>
-                <x-ui.select id="id_unit" name="id_unit" placeholder="Pilih unit" :options="$unitOptions" :selected="$oldIf('create', 'id_unit')" required />
+            <x-ui.field label="Unit / Sub Unit" for="unit-picker" name="id_unit" form="create" required>
+                <x-unit-picker :units="$units" :unit="$oldIf('create', 'id_unit')" :sub-unit="$oldIf('create', 'id_sub_unit')" :invalid="$errors->has('id_unit') || $errors->has('id_sub_unit')" />
             </x-ui.field>
             <x-ui.field label="Inventaris" for="inventaris" name="inventaris" form="create" required>
                 <x-ui.select id="inventaris" name="inventaris" placeholder="Pilih status" :options="['y' => 'Inventaris', 'n' => 'Non-Inventaris']" :selected="$oldIf('create', 'inventaris')" required />

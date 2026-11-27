@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Support\PerPage;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Models\Permohonan;
 use App\Models\Laporan;
 use App\Models\Unit;
@@ -31,7 +32,7 @@ class PermohonanController extends Controller
 
         $permohonans = $query->orderBy('tanggal', 'desc')->paginate(PerPage::get())->withQueryString();
         
-        $units = Unit::with('kampus')->get();
+        $units = Unit::with(['kampus', 'subUnits'])->get();
         $jenisPerangkats = JenisPerangkat::orderBy('nama_perangkat')->get();
         $jenisPerawatans = JenisPerawatan::orderBy('nama_perawatan')->get();
         $detailPerawatans = DetailPerawatan::orderBy('nama_detail_perawatan')->get();
@@ -53,6 +54,8 @@ class PermohonanController extends Controller
             'kontak_pemohon' => 'required|string|max:255',
             'pimpinan_pemohon' => 'nullable|string|max:255',
             'id_unit' => 'required|exists:unit,id_unit',
+            // Optional, and must belong to the chosen unit.
+            'id_sub_unit' => ['nullable', 'integer', Rule::exists('sub_unit', 'id_sub_unit')->where('id_unit', $request->input('id_unit'))],
             'inventaris' => 'required|in:y,n',
             'keluhan' => 'required|string',
         ]);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Support\PerPage;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Models\Permohonan;
 use App\Models\Unit;
 use App\Models\User;
@@ -24,7 +25,7 @@ class PublicController extends Controller
 
     public function showForm()
     {
-        $units = Unit::with('kampus')->get();
+        $units = Unit::with(['kampus', 'subUnits'])->get();
         return view('public.form-permohonan', compact('units'));
     }
 
@@ -36,6 +37,8 @@ class PublicController extends Controller
             'kontak_pemohon' => 'required|string|max:255',
             'pimpinan_pemohon' => 'nullable|string|max:255',
             'id_unit' => 'required|exists:unit,id_unit',
+            // Optional, and must belong to the chosen unit.
+            'id_sub_unit' => ['nullable', 'integer', Rule::exists('sub_unit', 'id_sub_unit')->where('id_unit', $request->input('id_unit'))],
             'inventaris' => 'required|in:y,n',
             'keluhan' => 'required|string',
         ]);
